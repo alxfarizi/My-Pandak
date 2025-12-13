@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'tambah_data_warga_page.dart';
+import 'tambah_data_data_warga_page.dart';
 
 class DataWargaPage extends StatelessWidget {
   const DataWargaPage({super.key});
