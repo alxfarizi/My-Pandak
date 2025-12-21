@@ -15,13 +15,16 @@ class RegisterPage extends StatelessWidget {
               height: 200,
               width: double.infinity,
               child: Image.asset(
-                '.figma/image/mi612w4r-oz1z9fs.png',
+                'assets/images/login_register.png',
                 fit: BoxFit.cover,
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -43,21 +46,68 @@ class RegisterPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text('NIK', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Text(
+                      'NIK',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    _TextField(hint: 'Masukan NIK atau Email Google Anda', prefix: const Icon(Icons.assignment_ind, color: Colors.grey)),
+                    _TextField(
+                      hint: 'Masukan NIK atau Email Google Anda',
+                      prefix: const Icon(
+                        Icons.assignment_ind,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    const Text('Email google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Text(
+                      'Email google',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    _TextField(hint: 'Masukan NIK atau Email Google Anda', prefix: const Icon(Icons.g_mobiledata, color: Colors.grey, size: 35)),
+                    _TextField(
+                      hint: 'Masukan NIK atau Email Google Anda',
+                      prefix: const Icon(
+                        Icons.g_mobiledata,
+                        color: Colors.grey,
+                        size: 35,
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    const Text('Password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Text(
+                      'Password',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    _TextField(hint: 'Password', obscure: true, prefix: const Icon(Icons.key, color: Colors.grey), suffix: const Icon(Icons.visibility, color: Colors.grey)),
+                    _TextField(
+                      hint: 'Password',
+                      obscure: true,
+                      prefix: const Icon(Icons.key, color: Colors.grey),
+                      suffix: const Icon(Icons.visibility, color: Colors.grey),
+                    ),
                     const SizedBox(height: 16),
-                    const Text('Ulangi Password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Text(
+                      'Ulangi Password',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    _TextField(hint: 'Password', obscure: true, prefix: const Icon(Icons.key, color: Colors.grey), suffix: const Icon(Icons.visibility, color: Colors.grey)),
+                    _TextField(
+                      hint: 'Password',
+                      obscure: true,
+                      prefix: const Icon(Icons.key, color: Colors.grey),
+                      suffix: const Icon(Icons.visibility, color: Colors.grey),
+                    ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -71,13 +121,22 @@ class RegisterPage extends StatelessWidget {
                         ),
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const DashboardPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const DashboardPage(),
+                            ),
                           );
                         },
-                        icon: const Icon(Icons.account_circle, color: Colors.white),
+                        icon: const Icon(
+                          Icons.account_circle,
+                          color: Colors.white,
+                        ),
                         label: const Text(
                           'Daftarkan Akun',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

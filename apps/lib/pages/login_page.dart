@@ -16,13 +16,16 @@ class LoginPage extends StatelessWidget {
               height: 240,
               width: double.infinity,
               child: Image.asset(
-                '.figma/image/mi612ra5-q9s875l.png',
+                'assets/images/login_register.png',
                 fit: BoxFit.cover,
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -54,8 +57,15 @@ class LoginPage extends StatelessWidget {
                     const SizedBox(height: 14),
                     _TextField(
                       hint: 'Masukan NIK atau Email Google Anda',
-                      prefix: const Icon(Icons.assignment_ind, color: Colors.grey),
-                      suffix: const Icon(Icons.g_mobiledata, color: Colors.grey, size: 35),
+                      prefix: const Icon(
+                        Icons.assignment_ind,
+                        color: Colors.grey,
+                      ),
+                      suffix: const Icon(
+                        Icons.g_mobiledata,
+                        color: Colors.grey,
+                        size: 35,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -114,7 +124,9 @@ class LoginPage extends StatelessWidget {
                         ),
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const DashboardPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const DashboardPage(),
+                            ),
                           );
                         },
                         child: const Text(
@@ -133,7 +145,9 @@ class LoginPage extends StatelessWidget {
                       child: TextButton(
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const RegisterPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterPage(),
+                            ),
                           );
                         },
                         child: const Text(

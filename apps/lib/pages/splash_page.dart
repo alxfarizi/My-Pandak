@@ -16,9 +16,9 @@ class _SplashPageState extends State<SplashPage> {
     super.initState();
     _navTimer = Timer(const Duration(seconds: 10), () {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
     });
   }
 
@@ -59,7 +59,7 @@ class _SplashPageState extends State<SplashPage> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Image.asset(
-                                '.figma/image/mi6120ub-jytvix3.png',
+                                'assets/images/logo_aplikasi.png',
                                 width: logoSize,
                                 height: logoSize,
                                 fit: BoxFit.contain,
