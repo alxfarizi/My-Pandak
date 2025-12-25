@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import '../controllers/keluarga_controller.dart';
+import '../data/models/keluarga.dart';
 
 class TambahDataKeluargaPage extends StatefulWidget {
-  const TambahDataKeluargaPage({super.key});
+  final Keluarga? initial;
+  const TambahDataKeluargaPage({super.key, this.initial});
 
   @override
   State<TambahDataKeluargaPage> createState() => _TambahDataKeluargaPageState();
@@ -17,20 +21,26 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   static const EdgeInsets _sectionPadding = EdgeInsets.zero;
   static const Color _dotColor = Color(0xFFA0A0A0);
   static const String _fontFamily = 'Poppins';
+  final KeluargaController _controller = KeluargaController();
 
   final TextEditingController _desaWismaController = TextEditingController();
   final TextEditingController _rtController = TextEditingController();
   final TextEditingController _rwController = TextEditingController();
   final TextEditingController _dusunController = TextEditingController();
   final TextEditingController _lingkunganController = TextEditingController();
-  final TextEditingController _namaKepalaRumahTanggaController = TextEditingController();
-  
-  final TextEditingController _namaKrtPerkaranganController = TextEditingController();
-  final TextEditingController _namaKrtIndustriController = TextEditingController();
+  final TextEditingController _namaKepalaRumahTanggaController =
+      TextEditingController();
 
-  final TextEditingController _jumlahAnggotaController = TextEditingController();
+  final TextEditingController _namaKrtPerkaranganController =
+      TextEditingController();
+  final TextEditingController _namaKrtIndustriController =
+      TextEditingController();
+
+  final TextEditingController _jumlahAnggotaController =
+      TextEditingController();
   final TextEditingController _jumlahLakiController = TextEditingController();
-  final TextEditingController _jumlahPerempuanController = TextEditingController();
+  final TextEditingController _jumlahPerempuanController =
+      TextEditingController();
   final TextEditingController _jumlahController = TextEditingController();
 
   final TextEditingController _jumlahKkController = TextEditingController();
@@ -42,19 +52,20 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   final TextEditingController _ibuMenyusuiController = TextEditingController();
   final TextEditingController _lansiaController = TextEditingController();
 
-  String? _lansiaKriteria; 
-  String? _makananPokok; 
-  String? _jambanKeluarga; 
-  String? _sumberAir; 
-  String? _tempatSampah; 
-  String? _saluranAirLimbah; 
-  final TextEditingController _jumlahJambanOrangController = TextEditingController();
-  String? _menempelStikerP4k; 
-  String? _kriteriaRumah; 
-  String? _aktivitasUp2k; 
+  String? _lansiaKriteria;
+  String? _makananPokok;
+  String? _jambanKeluarga;
+  String? _sumberAir;
+  String? _tempatSampah;
+  String? _saluranAirLimbah;
+  final TextEditingController _jumlahJambanOrangController =
+      TextEditingController();
+  String? _menempelStikerP4k;
+  String? _kriteriaRumah;
+  String? _aktivitasUp2k;
   final TextEditingController _jenisUsahaController = TextEditingController();
-  String? _jenisUsahaPilihan; 
-  String? _aktivitasKegiatanKesehatan; 
+  String? _jenisUsahaPilihan;
+  String? _aktivitasKegiatanKesehatan;
 
   int _balitaLaki = 0;
   int _balitaPerempuan = 0;
@@ -68,13 +79,105 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   int _ibuMenyusui = 0;
   int _lansiaLaki = 0;
   int _lansiaPerempuan = 0;
-  int _berkebutuhanKhusus = 0;
+  String? _berkebutuhanKhusus;
 
-  List<Map<String, dynamic>> _anggotaKeluarga = [];
+  List<_AnggotaRowData> _anggotaKeluarga = [];
   int _nextAnggotaId = 1;
+
+  final GlobalKey<_EditableTableState> _pemanfaatanTanahKey = GlobalKey();
+  final GlobalKey<_EditableTableState> _industriKeluargaKey = GlobalKey();
+
+  List<Map<String, dynamic>>? _initialPemanfaatanTanah;
+  List<Map<String, dynamic>>? _initialIndustriKeluarga;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial != null) {
+      final data = widget.initial!;
+      _desaWismaController.text = data.mawar;
+      _rtController.text = data.rt ?? '';
+      _rwController.text = data.rw ?? '';
+      _dusunController.text = data.dusun ?? '';
+      _lingkunganController.text = data.lingkungan ?? '';
+      _namaKepalaRumahTanggaController.text = data.nama;
+      _jumlahAnggotaController.text = data.jumlah;
+      _jumlahLakiController.text = data.jumlahLaki ?? '';
+      _jumlahPerempuanController.text = data.jumlahPerempuan ?? '';
+      _jumlahKkController.text = data.jumlahKk ?? '';
+      _balitaController.text = data.balita ?? '';
+      _pusController.text = data.pus ?? '';
+      _wusController.text = data.wus ?? '';
+      _butaController.text = data.buta ?? '';
+      _ibuHamilController.text = data.ibuHamil ?? '';
+      _ibuMenyusuiController.text = data.ibuMenyusui ?? '';
+      _lansiaController.text = data.lansia ?? '';
+      _lansiaKriteria = data.lansiaKriteria;
+      _makananPokok = data.makananPokok;
+      _jambanKeluarga = data.jambanKeluarga;
+      _jumlahJambanOrangController.text = data.jumlahJamban ?? '';
+      _sumberAir = data.sumberAir;
+      _tempatSampah = data.tempatSampah;
+      _saluranAirLimbah = data.saluranAirLimbah;
+      _menempelStikerP4k = data.stikerP4k;
+      _kriteriaRumah = data.kriteriaRumah;
+      _aktivitasUp2k = data.aktivitasUp2k;
+      _jenisUsahaPilihan = data.jenisUsaha;
+      _aktivitasKegiatanKesehatan = data.aktivitasKesehatan;
+      _namaKrtPerkaranganController.text = data.namaKrtPerkarangan ?? '';
+      _namaKrtIndustriController.text = data.namaKrtIndustri ?? '';
+      _berkebutuhanKhusus = data.berkebutuhanKhusus;
+
+      if (data.pemanfaatanTanah != null && data.pemanfaatanTanah!.isNotEmpty) {
+        try {
+          _initialPemanfaatanTanah = List<Map<String, dynamic>>.from(
+            jsonDecode(data.pemanfaatanTanah!),
+          );
+        } catch (_) {}
+      }
+      if (data.industriKeluarga != null && data.industriKeluarga!.isNotEmpty) {
+        try {
+          _initialIndustriKeluarga = List<Map<String, dynamic>>.from(
+            jsonDecode(data.industriKeluarga!),
+          );
+        } catch (_) {}
+      }
+
+      if (data.anggotaKeluarga != null && data.anggotaKeluarga!.isNotEmpty) {
+        try {
+          final List<dynamic> jsonList = jsonDecode(data.anggotaKeluarga!);
+          _anggotaKeluarga = jsonList.map((m) {
+            final row = _AnggotaRowData(
+              id: m['id'] as int? ?? 0,
+              no: m['no'] as int? ?? 0,
+            );
+            row.noReg.text = m['noReg'] ?? '';
+            row.nama.text = m['nama'] ?? '';
+            row.statusKeluarga.text = m['statusKeluarga'] ?? '';
+            row.statusPerkawinan.text = m['statusPerkawinan'] ?? '';
+            row.jenisKelamin = m['jenisKelamin'] ?? '';
+            row.tglUmur.text = m['tglUmur'] ?? '';
+            row.pendidikan.text = m['pendidikan'] ?? '';
+            row.pekerjaan.text = m['pekerjaan'] ?? '';
+            return row;
+          }).toList();
+
+          if (_anggotaKeluarga.isNotEmpty) {
+            final maxId = _anggotaKeluarga
+                .map((e) => e.id)
+                .reduce((curr, next) => curr > next ? curr : next);
+            _nextAnggotaId = maxId + 1;
+          }
+        } catch (_) {}
+      }
+    }
+  }
 
   @override
   void dispose() {
+    for (var anggota in _anggotaKeluarga) {
+      anggota.dispose();
+    }
     _desaWismaController.dispose();
     _rtController.dispose();
     _rwController.dispose();
@@ -175,8 +278,11 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
     );
   }
 
-  Widget _buildDottedInput(String label, TextEditingController controller,
-      {String? placeholder}) {
+  Widget _buildDottedInput(
+    String label,
+    TextEditingController controller, {
+    String? placeholder,
+  }) {
     return _buildTwoColRow(
       label: label,
       labelTopOffset: 0,
@@ -187,13 +293,21 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
             controller: controller,
             decoration: InputDecoration(
               hintText: placeholder ?? '',
-              hintStyle:
-                  const TextStyle(color: _dotColor, fontSize: _valueFontSize, fontFamily: _fontFamily),
+              hintStyle: const TextStyle(
+                color: _dotColor,
+                fontSize: _valueFontSize,
+                fontFamily: _fontFamily,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 0,
+                vertical: 0,
+              ),
             ),
-            style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+            style: const TextStyle(
+              fontSize: _valueFontSize,
+              fontFamily: _fontFamily,
+            ),
           ),
           _dottedUnderline(),
         ],
@@ -247,7 +361,13 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                         : null,
                   ),
                   const SizedBox(width: 6),
-                  Text(option, style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+                  Text(
+                    option,
+                    style: const TextStyle(
+                      fontSize: _valueFontSize,
+                      fontFamily: _fontFamily,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                 ],
               ),
@@ -301,7 +421,13 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                       : null,
                 ),
                 const SizedBox(width: 6),
-                Text(option, style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+                Text(
+                  option,
+                  style: const TextStyle(
+                    fontSize: _valueFontSize,
+                    fontFamily: _fontFamily,
+                  ),
+                ),
                 const SizedBox(width: 8),
               ],
             ),
@@ -311,7 +437,11 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
     );
   }
 
-  Widget _buildCountWithUnit(String label, TextEditingController controller, String unit) {
+  Widget _buildCountWithUnit(
+    String label,
+    TextEditingController controller,
+    String unit,
+  ) {
     return _buildTwoColRow(
       label: label,
       right: Row(
@@ -324,17 +454,30 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                   controller: controller,
                   decoration: InputDecoration(
                     hintText: '...',
-                    hintStyle: const TextStyle(color: _dotColor, fontSize: _valueFontSize, fontFamily: _fontFamily),
+                    hintStyle: const TextStyle(
+                      color: _dotColor,
+                      fontSize: _valueFontSize,
+                      fontFamily: _fontFamily,
+                    ),
                     border: InputBorder.none,
                   ),
-                  style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+                  style: const TextStyle(
+                    fontSize: _valueFontSize,
+                    fontFamily: _fontFamily,
+                  ),
                 ),
                 _dottedUnderline(),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Text(unit, style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+          Text(
+            unit,
+            style: const TextStyle(
+              fontSize: _valueFontSize,
+              fontFamily: _fontFamily,
+            ),
+          ),
         ],
       ),
     );
@@ -363,19 +506,35 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
     );
   }
 
-  Widget _inlineLabeledCount(String label, TextEditingController controller, String unit) {
+  Widget _inlineLabeledCount(
+    String label,
+    TextEditingController controller,
+    String unit,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Builder(builder: (context) {
-          final lower = label.toLowerCase();
-          final isShort = label.length <= 10 || lower.contains('wus') || lower.contains('buta') || lower.contains('plus');
-          final double labelFont = isShort ? 11 : 10;
-          return Text(label, style: TextStyle(fontSize: labelFont, fontFamily: _fontFamily));
-        }),
+        Builder(
+          builder: (context) {
+            final lower = label.toLowerCase();
+            final isShort =
+                label.length <= 10 ||
+                lower.contains('wus') ||
+                lower.contains('buta') ||
+                lower.contains('plus');
+            final double labelFont = isShort ? 11 : 10;
+            return Text(
+              label,
+              style: TextStyle(fontSize: labelFont, fontFamily: _fontFamily),
+            );
+          },
+        ),
         const SizedBox(width: 3),
-        const Text(':', style: TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+        const Text(
+          ':',
+          style: TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+        ),
         const SizedBox(width: 3),
         SizedBox(
           width: 45,
@@ -386,11 +545,18 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                 controller: controller,
                 decoration: const InputDecoration(
                   hintText: '....',
-                  hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize, fontFamily: _fontFamily),
+                  hintStyle: TextStyle(
+                    color: _dotColor,
+                    fontSize: _valueFontSize,
+                    fontFamily: _fontFamily,
+                  ),
                   border: InputBorder.none,
                   isDense: true,
                 ),
-                style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+                style: const TextStyle(
+                  fontSize: _valueFontSize,
+                  fontFamily: _fontFamily,
+                ),
                 textAlign: TextAlign.center,
               ),
               _dottedUnderline(),
@@ -398,7 +564,13 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
           ),
         ),
         const SizedBox(width: 4),
-        Text(unit, style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+        Text(
+          unit,
+          style: const TextStyle(
+            fontSize: _valueFontSize,
+            fontFamily: _fontFamily,
+          ),
+        ),
       ],
     );
   }
@@ -416,11 +588,18 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                 controller: controller,
                 decoration: const InputDecoration(
                   hintText: '....',
-                  hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize, fontFamily: _fontFamily),
+                  hintStyle: TextStyle(
+                    color: _dotColor,
+                    fontSize: _valueFontSize,
+                    fontFamily: _fontFamily,
+                  ),
                   border: InputBorder.none,
                   isDense: true,
                 ),
-                style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+                style: const TextStyle(
+                  fontSize: _valueFontSize,
+                  fontFamily: _fontFamily,
+                ),
                 textAlign: TextAlign.center,
               ),
               _dottedUnderline(),
@@ -428,18 +607,32 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
           ),
         ),
         const SizedBox(width: 8),
-        Text(unit, style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
+        Text(
+          unit,
+          style: const TextStyle(
+            fontSize: _valueFontSize,
+            fontFamily: _fontFamily,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildVerticalCounter(String label, int value, Function(int) onChanged) {
+  Widget _buildVerticalCounter(
+    String label,
+    int value,
+    Function(int) onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w400, fontFamily: _fontFamily),
+          style: const TextStyle(
+            fontSize: _labelFontSize,
+            fontWeight: FontWeight.w400,
+            fontFamily: _fontFamily,
+          ),
         ),
         const SizedBox(height: 4),
         Row(
@@ -454,7 +647,10 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               child: InkWell(
                 onTap: () => onChanged(value > 0 ? value - 1 : 0),
                 child: const Center(
-                  child: Text('-', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    '-',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -469,7 +665,10 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               child: Center(
                 child: Text(
                   value.toString(),
-                  style: const TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+                  style: const TextStyle(
+                    fontSize: _valueFontSize,
+                    fontFamily: _fontFamily,
+                  ),
                 ),
               ),
             ),
@@ -484,7 +683,10 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               child: InkWell(
                 onTap: () => onChanged(value + 1),
                 child: const Center(
-                  child: Text('+', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    '+',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -496,26 +698,21 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
 
   void _tambahAnggotaKeluarga() {
     setState(() {
-      _anggotaKeluarga.add({
-        'id': _nextAnggotaId++,
-        'no': _anggotaKeluarga.length + 1,
-        'noReg': '',
-        'nama': '',
-        'statusKeluarga': '',
-        'statusPerkawinan': '',
-        'jenisKelamin': '', 
-        'tglUmur': '',
-        'pendidikan': '',
-        'pekerjaan': '',
-      });
+      _anggotaKeluarga.add(
+        _AnggotaRowData(id: _nextAnggotaId++, no: _anggotaKeluarga.length + 1),
+      );
     });
   }
 
   void _hapusAnggotaKeluarga(int id) {
     setState(() {
-      _anggotaKeluarga.removeWhere((anggota) => anggota['id'] == id);
-      for (int i = 0; i < _anggotaKeluarga.length; i++) {
-        _anggotaKeluarga[i]['no'] = i + 1;
+      final index = _anggotaKeluarga.indexWhere((element) => element.id == id);
+      if (index != -1) {
+        _anggotaKeluarga[index].dispose();
+        _anggotaKeluarga.removeAt(index);
+        for (int i = 0; i < _anggotaKeluarga.length; i++) {
+          _anggotaKeluarga[i].no = i + 1;
+        }
       }
     });
   }
@@ -531,9 +728,13 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Data Keluarga',
-          style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          widget.initial != null ? 'Edit Data Keluarga' : 'Data Keluarga',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: false,
       ),
@@ -541,13 +742,17 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+          children: [
             Padding(
               padding: _sectionPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDottedInput('Desa Wisma', _desaWismaController, placeholder: 'Masukan Desa Wisma'),
+                  _buildDottedInput(
+                    'Desa Wisma',
+                    _desaWismaController,
+                    placeholder: 'Masukan Desa Wisma',
+                  ),
                   const SizedBox(height: 12),
                   _buildTwoColRow(
                     label: 'RT / RW',
@@ -560,17 +765,25 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                 controller: _rtController,
                                 decoration: InputDecoration(
                                   hintText: 'RT',
-                                  hintStyle: const TextStyle(color: _dotColor, fontSize: _valueFontSize),
+                                  hintStyle: const TextStyle(
+                                    color: _dotColor,
+                                    fontSize: _valueFontSize,
+                                  ),
                                   border: InputBorder.none,
                                 ),
-                                style: const TextStyle(fontSize: _valueFontSize),
+                                style: const TextStyle(
+                                  fontSize: _valueFontSize,
+                                ),
                               ),
                               _dottedUnderline(),
                             ],
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text('/', style: TextStyle(fontSize: _valueFontSize)),
+                        const Text(
+                          '/',
+                          style: TextStyle(fontSize: _valueFontSize),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -579,10 +792,15 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                 controller: _rwController,
                                 decoration: InputDecoration(
                                   hintText: 'RW',
-                                  hintStyle: const TextStyle(color: _dotColor, fontSize: _valueFontSize),
+                                  hintStyle: const TextStyle(
+                                    color: _dotColor,
+                                    fontSize: _valueFontSize,
+                                  ),
                                   border: InputBorder.none,
                                 ),
-                                style: const TextStyle(fontSize: _valueFontSize),
+                                style: const TextStyle(
+                                  fontSize: _valueFontSize,
+                                ),
                               ),
                               _dottedUnderline(),
                             ],
@@ -603,17 +821,25 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                 controller: _dusunController,
                                 decoration: InputDecoration(
                                   hintText: 'Dusun',
-                                  hintStyle: const TextStyle(color: _dotColor, fontSize: _valueFontSize),
+                                  hintStyle: const TextStyle(
+                                    color: _dotColor,
+                                    fontSize: _valueFontSize,
+                                  ),
                                   border: InputBorder.none,
                                 ),
-                                style: const TextStyle(fontSize: _valueFontSize),
+                                style: const TextStyle(
+                                  fontSize: _valueFontSize,
+                                ),
                               ),
                               _dottedUnderline(),
                             ],
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text('/', style: TextStyle(fontSize: _valueFontSize)),
+                        const Text(
+                          '/',
+                          style: TextStyle(fontSize: _valueFontSize),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -622,10 +848,15 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                 controller: _lingkunganController,
                                 decoration: InputDecoration(
                                   hintText: 'Lingkungan',
-                                  hintStyle: const TextStyle(color: _dotColor, fontSize: _valueFontSize),
+                                  hintStyle: const TextStyle(
+                                    color: _dotColor,
+                                    fontSize: _valueFontSize,
+                                  ),
                                   border: InputBorder.none,
                                 ),
-                                style: const TextStyle(fontSize: _valueFontSize),
+                                style: const TextStyle(
+                                  fontSize: _valueFontSize,
+                                ),
                               ),
                               _dottedUnderline(),
                             ],
@@ -635,17 +866,25 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Desa pandak Kec Baturaden',
-                      style: TextStyle(fontSize: _valueFontSize)),
+                  const Text(
+                    'Desa pandak Kec Baturaden',
+                    style: TextStyle(fontSize: _valueFontSize),
+                  ),
                   const SizedBox(height: 4),
-                  const Text('Kab. Banyumas Prov. Jawa Tengah',
-                      style: TextStyle(fontSize: _valueFontSize)),
+                  const Text(
+                    'Kab. Banyumas Prov. Jawa Tengah',
+                    style: TextStyle(fontSize: _valueFontSize),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
-            _buildDottedInput('Nama Kepala Rumah Tangga', _namaKepalaRumahTanggaController, placeholder: 'Masukan Nama Kepala Rumah Tangga'),
+            _buildDottedInput(
+              'Nama Kepala Rumah Tangga',
+              _namaKepalaRumahTanggaController,
+              placeholder: 'Masukan Nama Kepala Rumah Tangga',
+            ),
             const SizedBox(height: 20),
 
             _buildTwoColRow(
@@ -656,61 +895,109 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _inlineCount(_jumlahAnggotaController, 'Orang'),
-                  _inlineLabeledCount('Laki-laki', _jumlahLakiController, 'Orang'),
-                  _inlineLabeledCount('Perempuan', _jumlahPerempuanController, 'Orang'),
+                  _inlineLabeledCount(
+                    'Laki-laki',
+                    _jumlahLakiController,
+                    'Orang',
+                  ),
+                  _inlineLabeledCount(
+                    'Perempuan',
+                    _jumlahPerempuanController,
+                    'Orang',
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
 
-            _indented(_buildCountWithUnit('1. Jumlah KK', _jumlahKkController, 'KK')),
+            _indented(
+              _buildCountWithUnit('1. Jumlah KK', _jumlahKkController, 'KK'),
+            ),
             const SizedBox(height: 8),
-            _indented(_buildTwoColRow(
-              label: '2. Jumlah',
-              right: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 180,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _inlineLabeledCount('A). Balita', _balitaController, 'Anak'),
-                          const SizedBox(height: 8),
-                          _inlineLabeledCount('C). WUS', _wusController, 'Orang'),
-                          const SizedBox(height: 8),
-                          _inlineLabeledCount('E). Ibu Hamil', _ibuHamilController, 'Orang'),
-                          const SizedBox(height: 8),
-                          _inlineLabeledCount('G). Lansia', _lansiaController, 'Orang'),
-                        ],
+            _indented(
+              _buildTwoColRow(
+                label: '2. Jumlah',
+                right: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 180,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _inlineLabeledCount(
+                              'A). Balita',
+                              _balitaController,
+                              'Anak',
+                            ),
+                            const SizedBox(height: 8),
+                            _inlineLabeledCount(
+                              'C). WUS',
+                              _wusController,
+                              'Orang',
+                            ),
+                            const SizedBox(height: 8),
+                            _inlineLabeledCount(
+                              'E). Ibu Hamil',
+                              _ibuHamilController,
+                              'Orang',
+                            ),
+                            const SizedBox(height: 8),
+                            _inlineLabeledCount(
+                              'G). Lansia',
+                              _lansiaController,
+                              'Orang',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 180,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _inlineLabeledCount('B). Plus', _pusController, 'Pasang'),
-                          const SizedBox(height: 8),
-                          _inlineLabeledCount('D). Buta', _butaController, 'Orang'),
-                          const SizedBox(height: 8),
-                          _inlineLabeledCount('F). Ibu Menyusui', _ibuMenyusuiController, 'Orang'),
-                          const SizedBox(height: 8),
-                          _checkboxOptionsInline(
-                            ['Fisik', 'Non Fisik'],
-                            _lansiaKriteria,
-                            (value) => setState(() => _lansiaKriteria = value),
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 180,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _inlineLabeledCount(
+                              'B). Plus',
+                              _pusController,
+                              'Pasang',
+                            ),
+                            const SizedBox(height: 8),
+                            _inlineLabeledCount(
+                              'D). Buta',
+                              _butaController,
+                              'Orang',
+                            ),
+                            const SizedBox(height: 8),
+                            _inlineLabeledCount(
+                              'F). Ibu Menyusui',
+                              _ibuMenyusuiController,
+                              'Orang',
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'H). Berkebutuhan Khusus',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontFamily: _fontFamily,
+                              ),
+                            ),
+                            _checkboxOptionsInline(
+                              ['Fisik', 'Non Fisik'],
+                              _berkebutuhanKhusus,
+                              (value) =>
+                                  setState(() => _berkebutuhanKhusus = value),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
             const SizedBox(height: 20),
 
             const SizedBox(height: 8),
@@ -723,7 +1010,10 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
                 ),
@@ -732,7 +1022,6 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                   'Total: ${_anggotaKeluarga.length} anggota',
                   style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
-                
               ],
             ),
             const SizedBox(height: 16),
@@ -749,15 +1038,123 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                       ),
                       child: Row(
                         children: [
-                          const Expanded(flex: 1, child: Padding(padding: EdgeInsets.all(8), child: Text('NO', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 2, child: Padding(padding: EdgeInsets.all(8), child: Text('NO. REG', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Nama Anggota', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Status Dlm Keluarga', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Status Dlm Perkawinan', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 2, child: Padding(padding: EdgeInsets.all(8), child: Text('Jenis Kelamin', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Tgl. Lahir / Umur', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Pendidikan', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
-                          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: Text('Pekerjaan', style: TextStyle(fontSize: _labelFontSize, fontWeight: FontWeight.w600)))),
+                          const Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'NO',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 2,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'NO. REG',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Nama Anggota',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Status Dlm Keluarga',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Status Dlm Perkawinan',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 2,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Jenis Kelamin',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Tgl. Lahir / Umur',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Pendidikan',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                'Pekerjaan',
+                                style: TextStyle(
+                                  fontSize: _labelFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -783,170 +1180,332 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                         ),
                       ),
                     if (_anggotaKeluarga.isNotEmpty)
-                      ..._anggotaKeluarga.map((anggota) => Container(
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          left: BorderSide(color: Colors.black, width: 1),
-                          right: BorderSide(color: Colors.black, width: 1),
-                          bottom: BorderSide(color: Colors.black, width: 1),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(flex: 1, child: Padding(padding: EdgeInsets.all(8), child: Text(anggota['no'].toString(), style: const TextStyle(fontSize: _valueFontSize)))),
-                          Expanded(flex: 2, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Nomor Registrasi',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['noReg'] = value,
-                          ))),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Nama Anggota',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['nama'] = value,
-                          ))),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Status Dlm Keluarga',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['statusKeluarga'] = value,
-                          ))),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Status Dlm Perkawinan',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['statusPerkawinan'] = value,
-                          ))),
-                          Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                              child: Wrap(
-                                spacing: 4,
-                                crossAxisAlignment: WrapCrossAlignment.center,
+                      ..._anggotaKeluarga
+                          .map(
+                            (anggota) => Container(
+                              decoration: const BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    color: Colors.black,
+                                    width: 1,
+                                  ),
+                                  right: BorderSide(
+                                    color: Colors.black,
+                                    width: 1,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: Colors.black,
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
                                 children: [
-                                  InkWell(
-                                    onTap: () => setState(() => anggota['jenisKelamin'] = anggota['jenisKelamin'] == 'L' ? null : 'L'),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.black, width: 1),
-                                            borderRadius: BorderRadius.circular(2),
-                                            color: Colors.white,
-                                          ),
-                                          child: anggota['jenisKelamin'] == 'L'
-                                              ? Center(
-                                                  child: Container(
-                                                    width: 6,
-                                                    height: 6,
-                                                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2)),
-                                                  ),
-                                                )
-                                              : null,
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Text(
+                                        anggota.no.toString(),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
                                         ),
-                                        const SizedBox(width: 4),
-                                        const Text('L', style: TextStyle(fontSize: 10)),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                  InkWell(
-                                    onTap: () => setState(() => anggota['jenisKelamin'] = anggota['jenisKelamin'] == 'P' ? null : 'P'),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: Colors.black, width: 1),
-                                            borderRadius: BorderRadius.circular(2),
-                                            color: Colors.white,
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.noReg,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Nomor Registrasi',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
                                           ),
-                                          child: anggota['jenisKelamin'] == 'P'
-                                              ? Center(
-                                                  child: Container(
-                                                    width: 6,
-                                                    height: 6,
-                                                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2)),
-                                                  ),
-                                                )
-                                              : null,
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
                                         ),
-                                        const SizedBox(width: 4),
-                                        const Text('P', style: TextStyle(fontSize: 10)),
-                                      ],
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.nama,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Nama Anggota',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.statusKeluarga,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Status Dlm Keluarga',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.statusPerkawinan,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Status Dlm Perkawinan',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 6,
+                                      ),
+                                      child: Wrap(
+                                        spacing: 4,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          InkWell(
+                                            onTap: () => setState(
+                                              () => anggota.jenisKelamin =
+                                                  anggota.jenisKelamin == 'L'
+                                                  ? null
+                                                  : 'L',
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.black,
+                                                      width: 1,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
+                                                    color: Colors.white,
+                                                  ),
+                                                  child:
+                                                      anggota.jenisKelamin ==
+                                                          'L'
+                                                      ? Center(
+                                                          child: Container(
+                                                            width: 6,
+                                                            height: 6,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: Colors
+                                                                      .black,
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        2,
+                                                                      ),
+                                                                ),
+                                                          ),
+                                                        )
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Text(
+                                                  'L',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          InkWell(
+                                            onTap: () => setState(
+                                              () => anggota.jenisKelamin =
+                                                  anggota.jenisKelamin == 'P'
+                                                  ? null
+                                                  : 'P',
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.black,
+                                                      width: 1,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
+                                                    color: Colors.white,
+                                                  ),
+                                                  child:
+                                                      anggota.jenisKelamin ==
+                                                          'P'
+                                                      ? Center(
+                                                          child: Container(
+                                                            width: 6,
+                                                            height: 6,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: Colors
+                                                                      .black,
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        2,
+                                                                      ),
+                                                                ),
+                                                          ),
+                                                        )
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Text(
+                                                  'P',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.tglUmur,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Tgl. Lahir / Umur',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.pendidikan,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Pendidikan',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: TextField(
+                                        controller: anggota.pekerjaan,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Pekerjaan',
+                                          hintStyle: TextStyle(
+                                            color: _dotColor,
+                                            fontSize: _valueFontSize,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: _valueFontSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                      onPressed: () =>
+                                          _hapusAnggotaKeluarga(anggota.id),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Tgl. Lahir / Umur',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['tglUmur'] = value,
-                          ))),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Pendidikan',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['pendidikan'] = value,
-                          ))),
-                          Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8), child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Pekerjaan',
-                              hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: const TextStyle(fontSize: _valueFontSize),
-                            onChanged: (value) => anggota['pekerjaan'] = value,
-                          ))),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                              onPressed: () => _hapusAnggotaKeluarga(anggota['id']),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )).toList(),
+                          )
+                          .toList(),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 8),
             const Text(
               'Status Dalam Keluarga : Suami, Istri, Anak, Menantu, Keluarga, Dll',
@@ -954,260 +1513,452 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
             ),
             const SizedBox(height: 20),
 
-            _indented(_buildCheckboxGroup(
-              '3. Makanan Pokok Sehari-hari',
-              ['Beras', 'Non Beras'],
-              _makananPokok,
-              (v) => setState(() => _makananPokok = v),
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildTwoColRow(
-              label: '4. Mempunyai Jamban Keluarga',
-              right: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      InkWell(
-                        onTap: () => setState(() => _jambanKeluarga = _jambanKeluarga == 'Ya' ? null : 'Ya'),
-                        child: Row(children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                              borderRadius: BorderRadius.circular(2),
-                              color: Colors.white,
-                            ),
-                            child: _jambanKeluarga == 'Ya'
-                                ? Center(child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))))
-                                : null,
-                          ),
-                          const SizedBox(width: 6),
-                          const Text('Ya', style: TextStyle(fontSize: _valueFontSize)),
-                        ]),
-                      ),
-                      InkWell(
-                        onTap: () => setState(() => _jambanKeluarga = _jambanKeluarga == 'Tidak' ? null : 'Tidak'),
-                        child: Row(children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                              borderRadius: BorderRadius.circular(2),
-                              color: Colors.white,
-                            ),
-                            child: _jambanKeluarga == 'Tidak'
-                                ? Center(child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))))
-                                : null,
-                          ),
-                          const SizedBox(width: 6),
-                          const Text('Tidak', style: TextStyle(fontSize: _valueFontSize)),
-                        ]),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Jumlah : ', style: TextStyle(fontSize: _valueFontSize)),
-                      _inlineNumber(_jumlahJambanOrangController),
-                      const SizedBox(width: 4),
-                      const Text('Orang', style: TextStyle(fontSize: _valueFontSize)),
-                    ],
-                  ),
-                ],
+            _indented(
+              _buildCheckboxGroup(
+                '3. Makanan Pokok Sehari-hari',
+                ['Beras', 'Non Beras'],
+                _makananPokok,
+                (v) => setState(() => _makananPokok = v),
               ),
-            )),
+            ),
             const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '5. Sumber Air Keluarga',
-              ['PDAM', 'Sumur', 'Lainnya'],
-              _sumberAir,
-              (v) => setState(() => _sumberAir = v),
-              rowAlign: CrossAxisAlignment.start,
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '6. Memiliki Tempat Pembuangan Sampah',
-              ['Ya', 'Tidak'],
-              _tempatSampah,
-              (v) => setState(() => _tempatSampah = v),
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '7. Mempunyai Saluran Pembuangan Air Limbah',
-              ['Ya', 'Tidak'],
-              _saluranAirLimbah,
-              (v) => setState(() => _saluranAirLimbah = v),
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '8. Menempel Stiker P4K',
-              ['Ya', 'Tidak'],
-              _menempelStikerP4k,
-              (v) => setState(() => _menempelStikerP4k = v),
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '9. Kriteria Rumah',
-              ['Ya', 'Tidak'],
-              _kriteriaRumah,
-              (v) => setState(() => _kriteriaRumah = v),
-            )),
-            const SizedBox(height: 12),
-            _indented(_buildTwoColRow(
-              label: '10. Aktivitas UP2K',
-              right: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 12,
-                    children: [
-                      InkWell(
-                        onTap: () => setState(() => _aktivitasUp2k = _aktivitasUp2k == 'Ya' ? null : 'Ya'),
-                        child: Row(children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                              borderRadius: BorderRadius.circular(2),
-                              color: Colors.white,
-                            ),
-                            child: _aktivitasUp2k == 'Ya'
-                                ? Center(child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))))
-                                : null,
-                          ),
-                          const SizedBox(width: 6),
-                          const Text('Ya', style: TextStyle(fontSize: _valueFontSize)),
-                        ]),
-                      ),
-                      InkWell(
-                        onTap: () => setState(() => _aktivitasUp2k = _aktivitasUp2k == 'Tidak' ? null : 'Tidak'),
-                        child: Row(children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                              borderRadius: BorderRadius.circular(2),
-                              color: Colors.white,
-                            ),
-                            child: _aktivitasUp2k == 'Tidak'
-                                ? Center(child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(2))))
-                                : null,
-                          ),
-                          const SizedBox(width: 6),
-                          const Text('Tidak', style: TextStyle(fontSize: _valueFontSize)),
-                        ]),
-                      ),
-                    ],
-                  ),
-                  if (_aktivitasUp2k == 'Ya') ...[
-                    const SizedBox(height: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            _indented(
+              _buildTwoColRow(
+                label: '4. Mempunyai Jamban Keluarga',
+                right: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Text(
-                          'Jenis Usaha',
-                          style: TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily),
+                        InkWell(
+                          onTap: () => setState(
+                            () => _jambanKeluarga = _jambanKeluarga == 'Ya'
+                                ? null
+                                : 'Ya',
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2,
+                              horizontal: 2,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(2),
+                                    color: Colors.white,
+                                  ),
+                                  child: _jambanKeluarga == 'Ya'
+                                      ? Center(
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Ya',
+                                  style: TextStyle(fontSize: _valueFontSize),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 6),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            InkWell(
-                              onTap: () => setState(() => _jenisUsahaPilihan = _jenisUsahaPilihan == 'Warung' ? null : 'Warung'),
-                              borderRadius: BorderRadius.circular(4),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.black, width: 1),
-                                        borderRadius: BorderRadius.circular(2),
-                                        color: Colors.white,
-                                      ),
-                                      child: _jenisUsahaPilihan == 'Warung'
-                                          ? Center(
-                                              child: Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    const Text('Warung', style: TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
-                                  ],
-                                ),
-                              ),
+                        InkWell(
+                          onTap: () => setState(
+                            () => _jambanKeluarga = _jambanKeluarga == 'Tidak'
+                                ? null
+                                : 'Tidak',
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2,
+                              horizontal: 2,
                             ),
-                            const SizedBox(height: 6),
-                            InkWell(
-                              onTap: () => setState(() => _jenisUsahaPilihan = _jenisUsahaPilihan == 'Kegiatan Koperasi' ? null : 'Kegiatan Koperasi'),
-                              borderRadius: BorderRadius.circular(4),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.black, width: 1),
-                                        borderRadius: BorderRadius.circular(2),
-                                        color: Colors.white,
-                                      ),
-                                      child: _jenisUsahaPilihan == 'Kegiatan Koperasi'
-                                          ? Center(
-                                              child: Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                            )
-                                          : null,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 1,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Text('Kegiatan Koperasi', style: TextStyle(fontSize: _valueFontSize, fontFamily: _fontFamily)),
-                                  ],
+                                    borderRadius: BorderRadius.circular(2),
+                                    color: Colors.white,
+                                  ),
+                                  child: _jambanKeluarga == 'Tidak'
+                                      ? Center(
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
                                 ),
-                              ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Tidak',
+                                  style: TextStyle(fontSize: _valueFontSize),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
+                    if (_jambanKeluarga == 'Ya') ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Jumlah : ',
+                            style: TextStyle(fontSize: _valueFontSize),
+                          ),
+                          _inlineNumber(_jumlahJambanOrangController),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'Orang',
+                            style: TextStyle(fontSize: _valueFontSize),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            )),
+            ),
             const SizedBox(height: 12),
-            _indented(_buildCheckboxGroup(
-              '11. Aktivitas Kegiatan Usaha Kesehatan Lingkungan',
-              ['Layak', 'Tidak Layak'],
-              _aktivitasKegiatanKesehatan,
-              (v) => setState(() => _aktivitasKegiatanKesehatan = v),
-            )),
+            _indented(
+              _buildCheckboxGroup(
+                '5. Sumber Air Keluarga',
+                ['PDAM', 'Sumur', 'Lainnya'],
+                _sumberAir,
+                (v) => setState(() => _sumberAir = v),
+                rowAlign: CrossAxisAlignment.start,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildCheckboxGroup(
+                '6. Memiliki Tempat Pembuangan Sampah',
+                ['Ya', 'Tidak'],
+                _tempatSampah,
+                (v) => setState(() => _tempatSampah = v),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildCheckboxGroup(
+                '7. Mempunyai Saluran Pembuangan Air Limbah',
+                ['Ya', 'Tidak'],
+                _saluranAirLimbah,
+                (v) => setState(() => _saluranAirLimbah = v),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildCheckboxGroup(
+                '8. Menempel Stiker P4K',
+                ['Ya', 'Tidak'],
+                _menempelStikerP4k,
+                (v) => setState(() => _menempelStikerP4k = v),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildCheckboxGroup(
+                '9. Kriteria Rumah',
+                ['Sehat', 'Kurang Sehat'],
+                _kriteriaRumah,
+                (v) => setState(() => _kriteriaRumah = v),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildTwoColRow(
+                label: '10. Aktivitas UP2K',
+                rowAlign: CrossAxisAlignment.start,
+                right: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 32,
+                      children: [
+                        InkWell(
+                          onTap: () => setState(
+                            () => _aktivitasUp2k = _aktivitasUp2k == 'Ya'
+                                ? null
+                                : 'Ya',
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2,
+                              horizontal: 2,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(2),
+                                    color: Colors.white,
+                                  ),
+                                  child: _aktivitasUp2k == 'Ya'
+                                      ? Center(
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Ya',
+                                  style: TextStyle(fontSize: _valueFontSize),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => setState(
+                            () => _aktivitasUp2k = _aktivitasUp2k == 'Tidak'
+                                ? null
+                                : 'Tidak',
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 2,
+                              horizontal: 2,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(2),
+                                    color: Colors.white,
+                                  ),
+                                  child: _aktivitasUp2k == 'Tidak'
+                                      ? Center(
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Tidak',
+                                  style: TextStyle(fontSize: _valueFontSize),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_aktivitasUp2k == 'Ya') ...[
+                      const SizedBox(height: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Jenis Usaha',
+                            style: TextStyle(
+                              fontSize: _valueFontSize,
+                              fontFamily: _fontFamily,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              InkWell(
+                                onTap: () => setState(
+                                  () => _jenisUsahaPilihan =
+                                      _jenisUsahaPilihan == 'Warung'
+                                      ? null
+                                      : 'Warung',
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                    horizontal: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                          color: Colors.white,
+                                        ),
+                                        child: _jenisUsahaPilihan == 'Warung'
+                                            ? Center(
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        'Warung',
+                                        style: TextStyle(
+                                          fontSize: _valueFontSize,
+                                          fontFamily: _fontFamily,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              InkWell(
+                                onTap: () => setState(
+                                  () => _jenisUsahaPilihan =
+                                      _jenisUsahaPilihan == 'Kegiatan Koperasi'
+                                      ? null
+                                      : 'Kegiatan Koperasi',
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                    horizontal: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                          color: Colors.white,
+                                        ),
+                                        child:
+                                            _jenisUsahaPilihan ==
+                                                'Kegiatan Koperasi'
+                                            ? Center(
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          2,
+                                                        ),
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        'Kegiatan Koperasi',
+                                        style: TextStyle(
+                                          fontSize: _valueFontSize,
+                                          fontFamily: _fontFamily,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _indented(
+              _buildCheckboxGroup(
+                '11. Aktivitas Kegiatan Usaha Kesehatan Lingkungan',
+                ['Layak', 'Tidak Layak'],
+                _aktivitasKegiatanKesehatan,
+                (v) => setState(() => _aktivitasKegiatanKesehatan = v),
+              ),
+            ),
             const SizedBox(height: 20),
 
             _SectionTitle('Pemanfaatan Tanah Perkarangan Hatinya PKK'),
@@ -1223,6 +1974,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               child: Container(
                 width: 1000,
                 child: _EditableTable(
+                  key: _pemanfaatanTanahKey,
                   headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
                   initialRows: 6,
                   presetKeterangan: const [
@@ -1234,6 +1986,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                     'Tanaman Keras',
                   ],
                   cellHeight: _tableCellHeight,
+                  initialData: _initialPemanfaatanTanah,
                 ),
               ),
             ),
@@ -1252,6 +2005,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               child: Container(
                 width: 1000,
                 child: _EditableTable(
+                  key: _industriKeluargaKey,
                   headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
                   initialRows: 4,
                   presetKeterangan: const [
@@ -1261,6 +2015,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                     'Lain-lain',
                   ],
                   cellHeight: _tableCellHeight,
+                  initialData: _initialIndustriKeluarga,
                 ),
               ),
             ),
@@ -1269,24 +2024,101 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                if (widget.initial != null)
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      if (widget.initial != null) {
+                        await _controller.deleteKeluarga(widget.initial!.id!);
+                      }
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    label: const Text('Hapus Data'),
                   ),
-                  icon: const Icon(Icons.delete_outline, size: 20),
-                  label: const Text('Hapus Data'),
-                ),
                 ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () async {
+                    final pemanfaatanTanah = _pemanfaatanTanahKey.currentState
+                        ?.getData();
+                    final industriKeluarga = _industriKeluargaKey.currentState
+                        ?.getData();
+
+                    final data = Keluarga(
+                      id: widget.initial?.id,
+                      nama: _namaKepalaRumahTanggaController.text,
+                      mawar: _desaWismaController.text,
+                      jumlah: _jumlahAnggotaController.text,
+                      rt: _rtController.text,
+                      rw: _rwController.text,
+                      dusun: _dusunController.text,
+                      lingkungan: _lingkunganController.text,
+                      jumlahLaki: _jumlahLakiController.text,
+                      jumlahPerempuan: _jumlahPerempuanController.text,
+                      jumlahKk: _jumlahKkController.text,
+                      balita: _balitaController.text,
+                      pus: _pusController.text,
+                      wus: _wusController.text,
+                      buta: _butaController.text,
+                      ibuHamil: _ibuHamilController.text,
+                      ibuMenyusui: _ibuMenyusuiController.text,
+                      lansia: _lansiaController.text,
+                      lansiaKriteria: _lansiaKriteria,
+                      makananPokok: _makananPokok,
+                      jambanKeluarga: _jambanKeluarga,
+                      jumlahJamban: _jumlahJambanOrangController.text,
+                      sumberAir: _sumberAir,
+                      tempatSampah: _tempatSampah,
+                      saluranAirLimbah: _saluranAirLimbah,
+                      stikerP4k: _menempelStikerP4k,
+                      kriteriaRumah: _kriteriaRumah,
+                      aktivitasUp2k: _aktivitasUp2k,
+                      jenisUsaha: _jenisUsahaPilihan,
+                      aktivitasKesehatan: _aktivitasKegiatanKesehatan,
+                      namaKrtPerkarangan: _namaKrtPerkaranganController.text,
+                      namaKrtIndustri: _namaKrtIndustriController.text,
+                      berkebutuhanKhusus: _berkebutuhanKhusus,
+                      pemanfaatanTanah: pemanfaatanTanah != null
+                          ? jsonEncode(pemanfaatanTanah)
+                          : null,
+                      industriKeluarga: industriKeluarga != null
+                          ? jsonEncode(industriKeluarga)
+                          : null,
+                      anggotaKeluarga: _anggotaKeluarga.isNotEmpty
+                          ? jsonEncode(
+                              _anggotaKeluarga.map((e) => e.toMap()).toList(),
+                            )
+                          : null,
+                    );
+
+                    if (data.nama.isNotEmpty) {
+                      if (widget.initial == null) {
+                        await _controller.addKeluarga(data);
+                      } else {
+                        await _controller.updateKeluarga(data);
+                      }
+                    }
+                    Navigator.pop(context);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2C4A7C),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   icon: const Icon(Icons.save_outlined, size: 20),
                   label: const Text('Simpan Data'),
@@ -1307,7 +2139,10 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(fontSize: _TambahDataKeluargaPageState._labelFontSize, fontWeight: FontWeight.w700),
+      style: const TextStyle(
+        fontSize: _TambahDataKeluargaPageState._labelFontSize,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 }
@@ -1331,7 +2166,9 @@ class _LabeledInput extends StatelessWidget {
           width: 120,
           child: Text(
             label,
-            style: const TextStyle(fontSize: _TambahDataKeluargaPageState._labelFontSize),
+            style: const TextStyle(
+              fontSize: _TambahDataKeluargaPageState._labelFontSize,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -1348,23 +2185,34 @@ class _LabeledInput extends StatelessWidget {
                     fontSize: _TambahDataKeluargaPageState._valueFontSize,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical: 0,
+                  ),
                 ),
-                style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+                style: const TextStyle(
+                  fontSize: _TambahDataKeluargaPageState._valueFontSize,
+                ),
               ),
-              LayoutBuilder(builder: (context, constraints) {
-                const double dotWidth = 3;
-                const double spacing = 4;
-                final int count = (constraints.maxWidth / (dotWidth + spacing)).floor();
-                return Row(
-                  children: List.generate(count, (index) => Container(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const double dotWidth = 3;
+                  const double spacing = 4;
+                  final int count =
+                      (constraints.maxWidth / (dotWidth + spacing)).floor();
+                  return Row(
+                    children: List.generate(
+                      count,
+                      (index) => Container(
                         width: dotWidth,
                         height: 1,
                         margin: const EdgeInsets.only(right: spacing),
                         color: const Color(0xFFA0A0A0),
-                      )),
-                );
-              }),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -1379,12 +2227,16 @@ class _EditableTable extends StatefulWidget {
   final double cellHeight;
   final List<String>? presetKeterangan;
   final bool showJumlahRow;
+  final List<Map<String, dynamic>>? initialData;
+
   const _EditableTable({
+    super.key,
     required this.headers,
     this.initialRows = 1,
     this.cellHeight = 28,
     this.presetKeterangan,
     this.showJumlahRow = true,
+    this.initialData,
   });
 
   @override
@@ -1394,7 +2246,8 @@ class _EditableTable extends StatefulWidget {
 class _EditableTableState extends State<_EditableTable> {
   final List<_TableRowData> _rows = [];
   double _volumeTotal = 0;
-  final TextEditingController _jumlahKomoditiController = TextEditingController();
+  final TextEditingController _jumlahKomoditiController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -1402,13 +2255,35 @@ class _EditableTableState extends State<_EditableTable> {
     final int count = widget.presetKeterangan?.length ?? widget.initialRows;
     for (int i = 0; i < count; i++) {
       final row = _TableRowData();
-      if (widget.presetKeterangan != null && i < widget.presetKeterangan!.length) {
+
+      if (widget.initialData != null && i < widget.initialData!.length) {
+        final data = widget.initialData![i];
+        if (data['keterangan'] != null)
+          row.keterangan.text = data['keterangan'];
+        if (data['komoditi'] != null) row.komoditi.text = data['komoditi'];
+        if (data['volume'] != null) row.volume.text = data['volume'];
+      }
+
+      if (widget.presetKeterangan != null &&
+          i < widget.presetKeterangan!.length) {
         row.keterangan.text = widget.presetKeterangan![i];
       }
       row.volume.addListener(_recomputeVolume);
       _rows.add(row);
     }
     _recomputeVolume();
+  }
+
+  List<Map<String, dynamic>> getData() {
+    return _rows
+        .map(
+          (r) => {
+            'keterangan': r.keterangan.text,
+            'komoditi': r.komoditi.text,
+            'volume': r.volume.text,
+          },
+        )
+        .toList();
   }
 
   @override
@@ -1432,7 +2307,11 @@ class _EditableTableState extends State<_EditableTable> {
     setState(() => _volumeTotal = total);
   }
 
-  Widget _cell({required Widget child, bool isHeader = false, bool isReadonly = false}) {
+  Widget _cell({
+    required Widget child,
+    bool isHeader = false,
+    bool isReadonly = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black, width: 1),
@@ -1459,10 +2338,21 @@ class _EditableTableState extends State<_EditableTable> {
       children: [
         Row(
           children: [
-            Expanded(child: _cell(child: Text(widget.headers[0]), isHeader: true)),
-            Expanded(flex: 3, child: _cell(child: Text(widget.headers[1]), isHeader: true)),
-            Expanded(flex: 3, child: _cell(child: Text(widget.headers[2]), isHeader: true)),
-            Expanded(flex: 2, child: _cell(child: Text(widget.headers[3]), isHeader: true)),
+            Expanded(
+              child: _cell(child: Text(widget.headers[0]), isHeader: true),
+            ),
+            Expanded(
+              flex: 3,
+              child: _cell(child: Text(widget.headers[1]), isHeader: true),
+            ),
+            Expanded(
+              flex: 3,
+              child: _cell(child: Text(widget.headers[2]), isHeader: true),
+            ),
+            Expanded(
+              flex: 2,
+              child: _cell(child: Text(widget.headers[3]), isHeader: true),
+            ),
             const SizedBox(width: 40),
           ],
         ),
@@ -1478,12 +2368,21 @@ class _EditableTableState extends State<_EditableTable> {
                   child: (widget.presetKeterangan != null)
                       ? Text(
                           r.keterangan.text,
-                          style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+                          style: const TextStyle(
+                            fontSize:
+                                _TambahDataKeluargaPageState._valueFontSize,
+                          ),
                         )
                       : TextField(
                           controller: r.keterangan,
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                          style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          style: const TextStyle(
+                            fontSize:
+                                _TambahDataKeluargaPageState._valueFontSize,
+                          ),
                         ),
                 ),
               ),
@@ -1492,8 +2391,13 @@ class _EditableTableState extends State<_EditableTable> {
                 child: _cell(
                   child: TextField(
                     controller: r.komoditi,
-                    decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                    style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: const TextStyle(
+                      fontSize: _TambahDataKeluargaPageState._valueFontSize,
+                    ),
                   ),
                 ),
               ),
@@ -1502,8 +2406,13 @@ class _EditableTableState extends State<_EditableTable> {
                 child: _cell(
                   child: TextField(
                     controller: r.volume,
-                    decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                    style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: const TextStyle(
+                      fontSize: _TambahDataKeluargaPageState._valueFontSize,
+                    ),
                   ),
                 ),
               ),
@@ -1511,36 +2420,39 @@ class _EditableTableState extends State<_EditableTable> {
             ],
           );
         }),
-        if (widget.showJumlahRow) Row(
-          children: [
-            Expanded(child: _cell(child: const Text('-'))),
-            Expanded(
-              flex: 3,
-              child: _cell(
-                child: const Text(
-                  'Jumlah',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                isReadonly: true,
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: _cell(
-                child: TextField(
-                  controller: _jumlahKomoditiController,
-                  decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                  style: const TextStyle(fontSize: _TambahDataKeluargaPageState._valueFontSize),
+        if (widget.showJumlahRow)
+          Row(
+            children: [
+              Expanded(child: _cell(child: const Text('-'))),
+              Expanded(
+                flex: 3,
+                child: _cell(
+                  child: const Text(
+                    'Jumlah',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  isReadonly: true,
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: _cell(child: Text('$_volumeTotal')),
-            ),
-            const SizedBox(width: 40),
-          ],
-        ),
+              Expanded(
+                flex: 3,
+                child: _cell(
+                  child: TextField(
+                    controller: _jumlahKomoditiController,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: const TextStyle(
+                      fontSize: _TambahDataKeluargaPageState._valueFontSize,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(flex: 2, child: _cell(child: Text('$_volumeTotal'))),
+              const SizedBox(width: 40),
+            ],
+          ),
       ],
     );
   }
@@ -1555,5 +2467,45 @@ class _TableRowData {
     keterangan.dispose();
     komoditi.dispose();
     volume.dispose();
+  }
+}
+
+class _AnggotaRowData {
+  int id;
+  int no;
+  final TextEditingController noReg = TextEditingController();
+  final TextEditingController nama = TextEditingController();
+  final TextEditingController statusKeluarga = TextEditingController();
+  final TextEditingController statusPerkawinan = TextEditingController();
+  String? jenisKelamin;
+  final TextEditingController tglUmur = TextEditingController();
+  final TextEditingController pendidikan = TextEditingController();
+  final TextEditingController pekerjaan = TextEditingController();
+
+  _AnggotaRowData({required this.id, required this.no});
+
+  void dispose() {
+    noReg.dispose();
+    nama.dispose();
+    statusKeluarga.dispose();
+    statusPerkawinan.dispose();
+    tglUmur.dispose();
+    pendidikan.dispose();
+    pekerjaan.dispose();
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'no': no,
+      'noReg': noReg.text,
+      'nama': nama.text,
+      'statusKeluarga': statusKeluarga.text,
+      'statusPerkawinan': statusPerkawinan.text,
+      'jenisKelamin': jenisKelamin,
+      'tglUmur': tglUmur.text,
+      'pendidikan': pendidikan.text,
+      'pekerjaan': pekerjaan.text,
+    };
   }
 }

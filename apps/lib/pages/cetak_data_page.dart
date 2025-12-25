@@ -94,7 +94,13 @@ class CetakDataPage extends StatelessWidget {
                             label: 'Data\nWarga',
                             color: const Color(0xFF3D5A99),
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const CetakDataWargaPage()));
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CetakDataWargaPage(),
+                                ),
+                              );
                             },
                           ),
                           _MenuCard(
@@ -102,7 +108,13 @@ class CetakDataPage extends StatelessWidget {
                             label: 'Data\nKeluarga',
                             color: const Color(0xFF4CAF50),
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const CetakDataKeluargaPage()));
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CetakDataKeluargaPage(),
+                                ),
+                              );
                             },
                           ),
                           _MenuCard(
@@ -110,7 +122,13 @@ class CetakDataPage extends StatelessWidget {
                             label: 'Catatan\nKeluarga',
                             color: const Color(0xFFFFA726),
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const CetakCatatanKeluargaPage()));
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const CetakCatatanKeluargaPage(),
+                                ),
+                              );
                             },
                           ),
                         ],
@@ -161,11 +179,18 @@ class _MenuCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(icon, color: Colors.white, size: 32),
           ),
           const SizedBox(height: 8),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
@@ -176,15 +201,17 @@ class _BottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int)? onTap;
 
-  const _BottomNav({
-    required this.currentIndex,
-    this.onTap,
-  });
+  const _BottomNav({required this.currentIndex, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+        ],
+      ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         backgroundColor: Colors.white,
@@ -193,10 +220,19 @@ class _BottomNav extends StatelessWidget {
         onTap: onTap,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Beranda'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Beranda',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.print), label: 'Cetak Data'),
-          BottomNavigationBarItem(icon: Icon(Icons.app_registration), label: 'Registrasi'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Pengaturan'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.app_registration),
+            label: 'Registrasi',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Pengaturan',
+          ),
         ],
       ),
     );
