@@ -1,7 +1,8 @@
+//cetak_data_catatan_keluarga_page.dart - DATA SYNC FIX
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'preview_catatan_keluarga_page.dart';
-import '../controllers/catatan_controller.dart';
-import '../data/models/catatan.dart';
+import '../controllers/catatan_keluarga_controller.dart';
 
 class CetakCatatanKeluargaPage extends StatefulWidget {
   const CetakCatatanKeluargaPage({super.key});
@@ -12,18 +13,13 @@ class CetakCatatanKeluargaPage extends StatefulWidget {
 }
 
 class _CetakCatatanKeluargaPageState extends State<CetakCatatanKeluargaPage> {
-  final CatatanController _controller = CatatanController();
-  List<Catatan> _catatanData = [];
-
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final rows = await _controller.loadCatatan();
-    setState(() => _catatanData = rows);
+    // Load data when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CatatanKeluargaController>().loadAllCatatanAsMap();
+    });
   }
 
   @override
@@ -87,12 +83,39 @@ class _CetakCatatanKeluargaPageState extends State<CetakCatatanKeluargaPage> {
                   ),
                 ),
                 Expanded(
-                  child: _catatanData.isEmpty
-                      ? Center(
+                  child: Consumer<CatatanKeluargaController>(
+                    builder: (context, catatanController, child) {
+                      if (catatanController.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (catatanController.error != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Error: ${catatanController.error}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    catatanController.refreshAsMap(),
+                                child: const Text('Coba Lagi'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (catatanController.catatanMapList.isEmpty) {
+                        return const Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: const Text(
-                              'Belum ada data yang tersedia sehingga belum bisa review catatan keluarga',
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              'Belum ada data catatan keluarga yang tersedia',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Color(0xFFA0A0A0),
@@ -101,94 +124,219 @@ class _CetakCatatanKeluargaPageState extends State<CetakCatatanKeluargaPage> {
                               ),
                             ),
                           ),
-                        )
-                      : SingleChildScrollView(
+                        );
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh: () => catatanController.refreshAsMap(),
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
-                              children: _catatanData
-                                  .map(
-                                    (catatan) => GestureDetector(
-                                      onTap: () {
-                                        final mapData = {
-                                          'nama': catatan.nama,
-                                          'mawar': catatan.mawar,
-                                          'tahun': catatan.tahun,
-                                          'kriteriaRumah':
-                                              catatan.kriteriaRumah ?? '',
-                                          'jambanKeluarga':
-                                              catatan.jambanKeluarga ?? '',
-                                          'jumlahJambanOrang':
-                                              catatan.jumlahJambanOrang ?? '',
-                                          'kesehatan': catatan.kesehatan ?? '',
-                                          'anggotaKeluarga':
-                                              catatan.anggotaKeluarga ?? '',
+                              children: catatanController.catatanMapList.map((
+                                catatan,
+                              ) {
+                                // Extract data dengan safe access
+                                final keluargaData =
+                                    catatan['keluarga']
+                                        as Map<String, dynamic>?;
+                                final desaWismaData =
+                                    keluargaData?['desa_wisma']
+                                        as Map<String, dynamic>?;
+
+                                final namaKepala =
+                                    keluargaData?['nama_kepala_keluarga']
+                                        ?.toString() ??
+                                    'Tidak diketahui';
+                                final namaDesa =
+                                    desaWismaData?['nama_desa']?.toString() ??
+                                    'Tidak diketahui';
+                                final tahun =
+                                    catatan['tahun']?.toString() ??
+                                    'Tidak diketahui';
+
+                                // FIXED: Convert to Map<String, String> dengan data real dari database
+                                final Map<String, String> catatanMap = {
+                                  // Basic identification
+                                  'nama': namaKepala,
+                                  'mawar': namaDesa,
+                                  'tahun': tahun,
+                                  'catatanDari':
+                                      catatan['nama_pencatat']?.toString() ??
+                                      namaKepala,
+                                  'anggotaKelompok':
+                                      catatan['anggota_kelompok_dasa_wisma']
+                                          ?.toString() ??
+                                      namaDesa,
+
+                                  // Housing conditions
+                                  'kriteriaRumah':
+                                      catatan['kriteria_rumah']?.toString() ??
+                                      '',
+                                  'jambanKeluarga':
+                                      (catatan['jamban_keluarga'] == true)
+                                      ? 'Ya'
+                                      : 'Tidak',
+                                  'jumlahJambanOrang':
+                                      catatan['jumlah_jamban_orang']
+                                          ?.toString() ??
+                                      '0',
+                                  'tempatSampah':
+                                      (catatan['tempat_sampah'] == true)
+                                      ? 'Ada'
+                                      : 'Tidak',
+                                  'statusKesehatan':
+                                      catatan['status_kesehatan']?.toString() ??
+                                      '',
+
+                                  // Additional info from keluarga relation
+                                  'rt': keluargaData?['rt']?.toString() ?? '',
+                                  'rw': keluargaData?['rw']?.toString() ?? '',
+                                  'dusun':
+                                      keluargaData?['dusun']?.toString() ?? '',
+                                  'lingkungan':
+                                      keluargaData?['lingkungan']?.toString() ??
+                                      '',
+
+                                  // Meta info
+                                  'anggotaKelompokAda':
+                                      'Ada', // Default value for UI compatibility
+                                  'id': catatan['id']?.toString() ?? '',
+                                  'keluargaId':
+                                      catatan['keluarga_id']?.toString() ?? '',
+                                  'tanggalPencatatan':
+                                      catatan['tanggal_pencatatan']
+                                          ?.toString() ??
+                                      '',
+                                  'status':
+                                      catatan['status']?.toString() ?? 'Draft',
+                                };
+
+                                return GestureDetector(
+                                  onTap: () async {
+                                    // FIXED: Load full catatan data with anggota details
+                                    final catatanId = catatan['id'];
+                                    if (catatanId != null) {
+                                      // Show loading
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (context) => const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+
+                                      try {
+                                        // Load full data with anggota details
+                                        await catatanController
+                                            .getCatatanByIdWithFullData(
+                                              catatanId,
+                                            );
+
+                                        // Close loading dialog
+                                        Navigator.pop(context);
+
+                                        // Navigate to preview with enhanced data
+                                        final enhancedCatatanMap = {
+                                          ...catatanMap,
+                                          // Add anggota data for table
+                                          'anggotaData': catatanController
+                                              .selectedCatatanAnggotaData,
                                         };
+
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 PreviewCatatanKeluargaPage(
-                                                  catatanData: mapData,
+                                                  catatanData: catatanMap,
+                                                  anggotaData: catatanController
+                                                      .selectedCatatanAnggotaData,
                                                 ),
                                           ),
                                         );
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 12,
+                                      } catch (e) {
+                                        // Close loading dialog
+                                        Navigator.pop(context);
+
+                                        // Show error
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Gagal memuat detail catatan: $e',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    } else {
+                                      // Fallback to basic preview
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              PreviewCatatanKeluargaPage(
+                                                catatanData: catatanMap,
+                                              ),
                                         ),
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE8E8E8),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8E8E8),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                namaKepala,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                namaDesa,
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    catatan.nama,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 15,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    catatan.mawar,
-                                                    style: const TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Text(
-                                              catatan.tahun,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
+                                        Text(
+                                          tahun,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                  )
-                                  .toList(),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
