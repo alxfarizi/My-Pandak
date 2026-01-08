@@ -1,10 +1,14 @@
+//tambah_data_data_keluarga_page.dart - COMPREHENSIVE FIX
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'package:provider/provider.dart';
 import '../controllers/keluarga_controller.dart';
+import '../controllers/anggota_keluarga_controller.dart';
 import '../data/models/keluarga.dart';
+import '../data/models/anggota_keluarga.dart';
 
 class TambahDataKeluargaPage extends StatefulWidget {
   final Keluarga? initial;
+
   const TambahDataKeluargaPage({super.key, this.initial});
 
   @override
@@ -21,8 +25,8 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   static const EdgeInsets _sectionPadding = EdgeInsets.zero;
   static const Color _dotColor = Color(0xFFA0A0A0);
   static const String _fontFamily = 'Poppins';
-  final KeluargaController _controller = KeluargaController();
 
+  // Form Controllers
   final TextEditingController _desaWismaController = TextEditingController();
   final TextEditingController _rtController = TextEditingController();
   final TextEditingController _rwController = TextEditingController();
@@ -30,19 +34,16 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   final TextEditingController _lingkunganController = TextEditingController();
   final TextEditingController _namaKepalaRumahTanggaController =
       TextEditingController();
-
   final TextEditingController _namaKrtPerkaranganController =
       TextEditingController();
   final TextEditingController _namaKrtIndustriController =
       TextEditingController();
-
   final TextEditingController _jumlahAnggotaController =
       TextEditingController();
   final TextEditingController _jumlahLakiController = TextEditingController();
   final TextEditingController _jumlahPerempuanController =
       TextEditingController();
   final TextEditingController _jumlahController = TextEditingController();
-
   final TextEditingController _jumlahKkController = TextEditingController();
   final TextEditingController _balitaController = TextEditingController();
   final TextEditingController _pusController = TextEditingController();
@@ -51,127 +52,142 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
   final TextEditingController _ibuHamilController = TextEditingController();
   final TextEditingController _ibuMenyusuiController = TextEditingController();
   final TextEditingController _lansiaController = TextEditingController();
+  final TextEditingController _jumlahJambanOrangController =
+      TextEditingController();
+  final TextEditingController _jenisUsahaController = TextEditingController();
 
+  // Form State Variables
   String? _lansiaKriteria;
   String? _makananPokok;
   String? _jambanKeluarga;
   String? _sumberAir;
   String? _tempatSampah;
   String? _saluranAirLimbah;
-  final TextEditingController _jumlahJambanOrangController =
-      TextEditingController();
   String? _menempelStikerP4k;
   String? _kriteriaRumah;
   String? _aktivitasUp2k;
-  final TextEditingController _jenisUsahaController = TextEditingController();
   String? _jenisUsahaPilihan;
   String? _aktivitasKegiatanKesehatan;
-
-  int _balitaLaki = 0;
-  int _balitaPerempuan = 0;
-  int _pusLaki = 0;
-  int _pusPerempuan = 0;
-  int _wusLaki = 0;
-  int _wusPerempuan = 0;
-  int _butaLaki = 0;
-  int _butaPerempuan = 0;
-  int _ibuHamil = 0;
-  int _ibuMenyusui = 0;
-  int _lansiaLaki = 0;
-  int _lansiaPerempuan = 0;
   String? _berkebutuhanKhusus;
 
+  // Anggota Keluarga Data
   List<_AnggotaRowData> _anggotaKeluarga = [];
-  int _nextAnggotaId = 1;
+  int _nextAnggotaId =
+      10001; // FIXED: Start from high number to avoid conflicts
 
+  // Table Keys
   final GlobalKey<_EditableTableState> _pemanfaatanTanahKey = GlobalKey();
   final GlobalKey<_EditableTableState> _industriKeluargaKey = GlobalKey();
 
+  // Initial Data
   List<Map<String, dynamic>>? _initialPemanfaatanTanah;
   List<Map<String, dynamic>>? _initialIndustriKeluarga;
+
+  // Controllers
+  late KeluargaController _keluargaController;
+  late AnggotaKeluargaController _anggotaController;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _keluargaController = context.read<KeluargaController>();
+      _anggotaController = context.read<AnggotaKeluargaController>();
+      _initializePage();
+    });
+  }
+
+  Future<void> _initializePage() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
     if (widget.initial != null) {
-      final data = widget.initial!;
-      _desaWismaController.text = data.mawar;
-      _rtController.text = data.rt ?? '';
-      _rwController.text = data.rw ?? '';
-      _dusunController.text = data.dusun ?? '';
-      _lingkunganController.text = data.lingkungan ?? '';
-      _namaKepalaRumahTanggaController.text = data.nama;
-      _jumlahAnggotaController.text = data.jumlah;
-      _jumlahLakiController.text = data.jumlahLaki ?? '';
-      _jumlahPerempuanController.text = data.jumlahPerempuan ?? '';
-      _jumlahKkController.text = data.jumlahKk ?? '';
-      _balitaController.text = data.balita ?? '';
-      _pusController.text = data.pus ?? '';
-      _wusController.text = data.wus ?? '';
-      _butaController.text = data.buta ?? '';
-      _ibuHamilController.text = data.ibuHamil ?? '';
-      _ibuMenyusuiController.text = data.ibuMenyusui ?? '';
-      _lansiaController.text = data.lansia ?? '';
-      _lansiaKriteria = data.lansiaKriteria;
-      _makananPokok = data.makananPokok;
-      _jambanKeluarga = data.jambanKeluarga;
-      _jumlahJambanOrangController.text = data.jumlahJamban ?? '';
-      _sumberAir = data.sumberAir;
-      _tempatSampah = data.tempatSampah;
-      _saluranAirLimbah = data.saluranAirLimbah;
-      _menempelStikerP4k = data.stikerP4k;
-      _kriteriaRumah = data.kriteriaRumah;
-      _aktivitasUp2k = data.aktivitasUp2k;
-      _jenisUsahaPilihan = data.jenisUsaha;
-      _aktivitasKegiatanKesehatan = data.aktivitasKesehatan;
-      _namaKrtPerkaranganController.text = data.namaKrtPerkarangan ?? '';
-      _namaKrtIndustriController.text = data.namaKrtIndustri ?? '';
-      _berkebutuhanKhusus = data.berkebutuhanKhusus;
-
-      if (data.pemanfaatanTanah != null && data.pemanfaatanTanah!.isNotEmpty) {
-        try {
-          _initialPemanfaatanTanah = List<Map<String, dynamic>>.from(
-            jsonDecode(data.pemanfaatanTanah!),
-          );
-        } catch (_) {}
-      }
-      if (data.industriKeluarga != null && data.industriKeluarga!.isNotEmpty) {
-        try {
-          _initialIndustriKeluarga = List<Map<String, dynamic>>.from(
-            jsonDecode(data.industriKeluarga!),
-          );
-        } catch (_) {}
-      }
-
-      if (data.anggotaKeluarga != null && data.anggotaKeluarga!.isNotEmpty) {
-        try {
-          final List<dynamic> jsonList = jsonDecode(data.anggotaKeluarga!);
-          _anggotaKeluarga = jsonList.map((m) {
-            final row = _AnggotaRowData(
-              id: m['id'] as int? ?? 0,
-              no: m['no'] as int? ?? 0,
-            );
-            row.noReg.text = m['noReg'] ?? '';
-            row.nama.text = m['nama'] ?? '';
-            row.statusKeluarga.text = m['statusKeluarga'] ?? '';
-            row.statusPerkawinan.text = m['statusPerkawinan'] ?? '';
-            row.jenisKelamin = m['jenisKelamin'] ?? '';
-            row.tglUmur.text = m['tglUmur'] ?? '';
-            row.pendidikan.text = m['pendidikan'] ?? '';
-            row.pekerjaan.text = m['pekerjaan'] ?? '';
-            return row;
-          }).toList();
-
-          if (_anggotaKeluarga.isNotEmpty) {
-            final maxId = _anggotaKeluarga
-                .map((e) => e.id)
-                .reduce((curr, next) => curr > next ? curr : next);
-            _nextAnggotaId = maxId + 1;
-          }
-        } catch (_) {}
-      }
+      await _initializeEditMode();
     }
   }
+
+  Future<void> _initializeEditMode() async {
+    final data = widget.initial!;
+
+    await _keluargaController.getKeluargaByIdWithAnggota(data.id!);
+
+    // Populate form fields
+    _desaWismaController.text = 'Desa Wisma ${data.desaWismaId ?? ''}';
+    _rtController.text = data.rt ?? '';
+    _rwController.text = data.rw ?? '';
+    _dusunController.text = data.dusun ?? '';
+    _lingkunganController.text = data.lingkungan ?? '';
+    _namaKepalaRumahTanggaController.text = data.namaKepalaKeluarga;
+    _jumlahAnggotaController.text = data.jumlahAnggota.toString();
+    _jumlahLakiController.text = data.jumlahLaki?.toString() ?? '';
+    _jumlahPerempuanController.text = data.jumlahPerempuan?.toString() ?? '';
+    _jumlahKkController.text = data.jumlahKk?.toString() ?? '';
+    _balitaController.text = data.jumlahBalita?.toString() ?? '';
+    _pusController.text = data.jumlahPus?.toString() ?? '';
+    _wusController.text = data.jumlahWus?.toString() ?? '';
+    _butaController.text = data.jumlahButa?.toString() ?? '';
+    _ibuHamilController.text = data.jumlahIbuHamil?.toString() ?? '';
+    _ibuMenyusuiController.text = data.jumlahIbuMenyusui?.toString() ?? '';
+    _lansiaController.text = data.jumlahLansia?.toString() ?? '';
+    _lansiaKriteria = data.kriteriaLansia;
+    _makananPokok = data.makananPokok;
+    _jambanKeluarga = data.jambanKeluarga == true ? 'Ya' : 'Tidak';
+    _jumlahJambanOrangController.text =
+        data.jumlahJambanOrang?.toString() ?? '';
+    _sumberAir = data.sumberAir;
+    _tempatSampah = data.tempatSampah == true ? 'Ya' : 'Tidak';
+    _saluranAirLimbah = data.saluranAirLimbah == true ? 'Ya' : 'Tidak';
+    _menempelStikerP4k = data.stikerP4k == true ? 'Ya' : 'Tidak';
+    _kriteriaRumah = data.kriteriaRumah;
+    _aktivitasUp2k = data.aktivitasUp2k == true ? 'Ya' : 'Tidak';
+    _jenisUsahaPilihan = data.jenisUsahaUp2k;
+    _aktivitasKegiatanKesehatan = data.aktivitasKesehatanLingkungan;
+    _namaKrtPerkaranganController.text = data.namaKepalaKeluarga;
+    _namaKrtIndustriController.text = data.namaKepalaKeluarga;
+
+    _loadAnggotaFromController();
+    setState(() {});
+  }
+
+  void _loadAnggotaFromController() {
+    final anggotaList = _keluargaController.selectedKeluargaAnggota;
+    _anggotaKeluarga.clear();
+
+    for (int i = 0; i < anggotaList.length; i++) {
+      final anggota = anggotaList[i];
+      final row = _AnggotaRowData(
+        id: anggota.id ?? _nextAnggotaId++,
+        no: i + 1,
+      );
+      row.noReg.text = anggota.noRegistrasi ?? '';
+      row.nama.text = anggota.nama;
+      row.statusKeluarga.text = anggota.statusDalamKeluarga ?? '';
+      row.statusPerkawinan.text = anggota.statusPerkawinan ?? '';
+      row.jenisKelamin = anggota.jenisKelamin;
+
+      if (anggota.tanggalLahir != null) {
+        row.tglUmur.text =
+        '${anggota.tanggalLahir!.day}/${anggota.tanggalLahir!.month}/${anggota.tanggalLahir!.year}';
+      } else if (anggota.umur != null) {
+        row.tglUmur.text = '${anggota.umur} tahun';
+      }
+
+      row.pendidikan.text = anggota.pendidikan ?? '';
+      row.pekerjaan.text = anggota.pekerjaan ?? '';
+      _anggotaKeluarga.add(row);
+    }
+
+    if (_anggotaKeluarga.isNotEmpty) {
+      final maxId = _anggotaKeluarga
+          .map((e) => e.id)
+          .reduce((curr, next) => curr > next ? curr : next);
+      _nextAnggotaId = maxId >= 10000 ? maxId + 1 : 10001;
+    }
+  }
+
+
+
 
   @override
   void dispose() {
@@ -203,6 +219,214 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
     super.dispose();
   }
 
+  // FIXED: Comprehensive data validation and saving
+  Future<void> _simpanData() async {
+    if (_namaKepalaRumahTanggaController.text.trim().isEmpty) {
+      _showError('Nama Kepala Rumah Tangga harus diisi');
+      return;
+    }
+
+    // FIXED: Validate anggota data
+    final validAnggota = _anggotaKeluarga
+        .where((row) => row.nama.text.trim().isNotEmpty)
+        .toList();
+
+    if (validAnggota.isEmpty) {
+      _showError('Minimal harus ada satu anggota keluarga');
+      return;
+    }
+
+    try {
+      final pemanfaatanTanah = _pemanfaatanTanahKey.currentState?.getData();
+      final industriKeluarga = _industriKeluargaKey.currentState?.getData();
+
+      final keluarga = Keluarga(
+        id: widget.initial?.id,
+        desaWismaId: 1,
+        namaKepalaKeluarga: _namaKepalaRumahTanggaController.text.trim(),
+        rt: _rtController.text.trim().isEmpty
+            ? null
+            : _rtController.text.trim(),
+        rw: _rwController.text.trim().isEmpty
+            ? null
+            : _rwController.text.trim(),
+        dusun: _dusunController.text.trim().isEmpty
+            ? null
+            : _dusunController.text.trim(),
+        lingkungan: _lingkunganController.text.trim().isEmpty
+            ? null
+            : _lingkunganController.text.trim(),
+        jumlahAnggota: int.tryParse(_jumlahAnggotaController.text) ?? 0,
+        jumlahLaki: int.tryParse(_jumlahLakiController.text) ?? 0,
+        jumlahPerempuan: int.tryParse(_jumlahPerempuanController.text) ?? 0,
+        jumlahKk: int.tryParse(_jumlahKkController.text) ?? 1,
+        jumlahBalita: int.tryParse(_balitaController.text) ?? 0,
+        jumlahPus: int.tryParse(_pusController.text) ?? 0,
+        jumlahWus: int.tryParse(_wusController.text) ?? 0,
+        jumlahButa: int.tryParse(_butaController.text) ?? 0,
+        jumlahIbuHamil: int.tryParse(_ibuHamilController.text) ?? 0,
+        jumlahIbuMenyusui: int.tryParse(_ibuMenyusuiController.text) ?? 0,
+        jumlahLansia: int.tryParse(_lansiaController.text) ?? 0,
+        kriteriaLansia: _lansiaKriteria,
+        makananPokok: _makananPokok,
+        jambanKeluarga: _jambanKeluarga == 'Ya',
+        jumlahJambanOrang: int.tryParse(_jumlahJambanOrangController.text) ?? 0,
+        sumberAir: _sumberAir,
+        tempatSampah: _tempatSampah == 'Ya',
+        saluranAirLimbah: _saluranAirLimbah == 'Ya',
+        stikerP4k: _menempelStikerP4k == 'Ya',
+        kriteriaRumah: _kriteriaRumah,
+        aktivitasUp2k: _aktivitasUp2k == 'Ya',
+        jenisUsahaUp2k: _jenisUsahaPilihan,
+        aktivitasKesehatanLingkungan: _aktivitasKegiatanKesehatan,
+      );
+
+      // FIXED: Proper anggota data conversion with validation
+      final anggotaList = validAnggota.map((row) {
+        // FIXED: Parse date from tglUmur field
+        DateTime? tanggalLahir;
+        int? umur;
+
+        final tglUmurText = row.tglUmur.text.trim();
+        if (tglUmurText.isNotEmpty) {
+          if (tglUmurText.contains('/')) {
+            // Try to parse as date (dd/mm/yyyy)
+            try {
+              final parts = tglUmurText.split('/');
+              if (parts.length == 3) {
+                final day = int.parse(parts[0]);
+                final month = int.parse(parts[1]);
+                final year = int.parse(parts[2]);
+                tanggalLahir = DateTime(year, month, day);
+              }
+            } catch (e) {
+              // Ignore parsing error
+            }
+          } else if (tglUmurText.contains('tahun')) {
+            // Try to parse as age
+            try {
+              umur = int.parse(tglUmurText.replaceAll('tahun', '').trim());
+            } catch (e) {
+              // Try to parse as plain number
+              umur = int.tryParse(tglUmurText);
+            }
+          } else {
+            // Try to parse as plain number (age)
+            umur = int.tryParse(tglUmurText);
+          }
+        }
+
+        return AnggotaKeluarga(
+          id: row.id >= 10000 ? null : row.id,
+          // FIXED: Only set ID for existing records
+          keluargaId: 0,
+          // Will be set by controller after keluarga is saved
+          noRegistrasi: row.noReg.text.trim().isEmpty
+              ? null
+              : row.noReg.text.trim(),
+          nama: row.nama.text.trim(),
+          statusDalamKeluarga: row.statusKeluarga.text.trim().isEmpty
+              ? null
+              : row.statusKeluarga.text.trim(),
+          statusPerkawinan: row.statusPerkawinan.text.trim().isEmpty
+              ? null
+              : row.statusPerkawinan.text.trim(),
+          jenisKelamin: row.jenisKelamin,
+          // FIXED: Keep as 'L' or 'P'
+          tanggalLahir: tanggalLahir,
+          umur: umur,
+          pendidikan: row.pendidikan.text.trim().isEmpty
+              ? null
+              : row.pendidikan.text.trim(),
+          pekerjaan: row.pekerjaan.text.trim().isEmpty
+              ? null
+              : row.pekerjaan.text.trim(),
+        );
+      }).toList();
+
+      bool success;
+      if (widget.initial != null) {
+        success = await _keluargaController.updateKeluargaWithAnggota(
+          widget.initial!.id!,
+          keluarga,
+          anggotaList,
+        );
+        if (success) {
+          _showSuccess('Data keluarga berhasil diperbarui!');
+        }
+      } else {
+        final savedKeluarga = await _keluargaController
+            .createKeluargaWithAnggota(keluarga, anggotaList);
+        success = savedKeluarga != null;
+        if (success) {
+          _showSuccess('Data keluarga berhasil disimpan!');
+        }
+      }
+
+      if (success) {
+        Navigator.pop(context, true);
+      } else {
+        _showError(_keluargaController.error ?? 'Gagal menyimpan data');
+      }
+    } catch (e) {
+      _showError('Gagal menyimpan data: $e');
+    }
+  }
+
+  Future<void> _hapusData() async {
+    if (widget.initial?.id == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text(
+          'Apakah Anda yakin ingin menghapus data keluarga ini? Semua anggota keluarga juga akan terhapus.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final success = await _keluargaController.deleteKeluarga(
+          widget.initial!.id!,
+        );
+        if (success) {
+          _showSuccess('Data keluarga berhasil dihapus!');
+          Navigator.pop(context, true);
+        } else {
+          _showError(_keluargaController.error ?? 'Gagal menghapus data');
+        }
+      } catch (e) {
+        _showError('Gagal menghapus data: $e');
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  // UI Builder Methods (unchanged)
   Widget _buildTwoColRow({
     required String label,
     required Widget right,
@@ -452,6 +676,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
               children: [
                 TextField(
                   controller: controller,
+                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: '...',
                     hintStyle: const TextStyle(
@@ -491,6 +716,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
         children: [
           TextField(
             controller: controller,
+            keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               hintText: '1',
               hintStyle: TextStyle(color: _dotColor, fontSize: _valueFontSize),
@@ -543,6 +769,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
             children: [
               TextField(
                 controller: controller,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   hintText: '....',
                   hintStyle: TextStyle(
@@ -586,6 +813,7 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
             children: [
               TextField(
                 controller: controller,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   hintText: '....',
                   hintStyle: TextStyle(
@@ -618,89 +846,13 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
     );
   }
 
-  Widget _buildVerticalCounter(
-    String label,
-    int value,
-    Function(int) onChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: _labelFontSize,
-            fontWeight: FontWeight.w400,
-            fontFamily: _fontFamily,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: InkWell(
-                onTap: () => onChanged(value > 0 ? value - 1 : 0),
-                child: const Center(
-                  child: Text(
-                    '-',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 40,
-              height: 24,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Center(
-                child: Text(
-                  value.toString(),
-                  style: const TextStyle(
-                    fontSize: _valueFontSize,
-                    fontFamily: _fontFamily,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: InkWell(
-                onTap: () => onChanged(value + 1),
-                child: const Center(
-                  child: Text(
-                    '+',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
+  // FIXED: Update tambah anggota method - no auto NIK fill
   void _tambahAnggotaKeluarga() {
     setState(() {
       _anggotaKeluarga.add(
         _AnggotaRowData(id: _nextAnggotaId++, no: _anggotaKeluarga.length + 1),
       );
+      // FIXED: Don't auto-fill NIK for additional members
     });
   }
 
@@ -738,610 +890,640 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
         ),
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: _sectionPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDottedInput(
-                    'Desa Wisma',
-                    _desaWismaController,
-                    placeholder: 'Masukan Desa Wisma',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTwoColRow(
-                    label: 'RT / RW',
-                    right: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _rtController,
-                                decoration: InputDecoration(
-                                  hintText: 'RT',
-                                  hintStyle: const TextStyle(
-                                    color: _dotColor,
-                                    fontSize: _valueFontSize,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: _valueFontSize,
-                                ),
-                              ),
-                              _dottedUnderline(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          '/',
-                          style: TextStyle(fontSize: _valueFontSize),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _rwController,
-                                decoration: InputDecoration(
-                                  hintText: 'RW',
-                                  hintStyle: const TextStyle(
-                                    color: _dotColor,
-                                    fontSize: _valueFontSize,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: _valueFontSize,
-                                ),
-                              ),
-                              _dottedUnderline(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTwoColRow(
-                    label: 'Dusun / Lingk',
-                    right: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _dusunController,
-                                decoration: InputDecoration(
-                                  hintText: 'Dusun',
-                                  hintStyle: const TextStyle(
-                                    color: _dotColor,
-                                    fontSize: _valueFontSize,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: _valueFontSize,
-                                ),
-                              ),
-                              _dottedUnderline(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          '/',
-                          style: TextStyle(fontSize: _valueFontSize),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _lingkunganController,
-                                decoration: InputDecoration(
-                                  hintText: 'Lingkungan',
-                                  hintStyle: const TextStyle(
-                                    color: _dotColor,
-                                    fontSize: _valueFontSize,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(
-                                  fontSize: _valueFontSize,
-                                ),
-                              ),
-                              _dottedUnderline(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Desa pandak Kec Baturaden',
-                    style: TextStyle(fontSize: _valueFontSize),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Kab. Banyumas Prov. Jawa Tengah',
-                    style: TextStyle(fontSize: _valueFontSize),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+      body: Consumer<KeluargaController>(
+        builder: (context, controller, child) {
+          if (controller.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            _buildDottedInput(
-              'Nama Kepala Rumah Tangga',
-              _namaKepalaRumahTanggaController,
-              placeholder: 'Masukan Nama Kepala Rumah Tangga',
-            ),
-            const SizedBox(height: 20),
-
-            _buildTwoColRow(
-              label: 'Jumlah Anggota Keluarga',
-              right: Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _inlineCount(_jumlahAnggotaController, 'Orang'),
-                  _inlineLabeledCount(
-                    'Laki-laki',
-                    _jumlahLakiController,
-                    'Orang',
-                  ),
-                  _inlineLabeledCount(
-                    'Perempuan',
-                    _jumlahPerempuanController,
-                    'Orang',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            _indented(
-              _buildCountWithUnit('1. Jumlah KK', _jumlahKkController, 'KK'),
-            ),
-            const SizedBox(height: 8),
-            _indented(
-              _buildTwoColRow(
-                label: '2. Jumlah',
-                right: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Alamat Section
+                Padding(
+                  padding: _sectionPadding,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 180,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      _buildDottedInput(
+                        'Desa Wisma',
+                        _desaWismaController,
+                        placeholder: 'Masukan Desa Wisma',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTwoColRow(
+                        label: 'RT / RW',
+                        right: Row(
                           children: [
-                            _inlineLabeledCount(
-                              'A). Balita',
-                              _balitaController,
-                              'Anak',
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _rtController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: 'RT',
+                                      hintStyle: const TextStyle(
+                                        color: _dotColor,
+                                        fontSize: _valueFontSize,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: _valueFontSize,
+                                    ),
+                                  ),
+                                  _dottedUnderline(),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            _inlineLabeledCount(
-                              'C). WUS',
-                              _wusController,
-                              'Orang',
+                            const SizedBox(width: 12),
+                            const Text(
+                              '/',
+                              style: TextStyle(fontSize: _valueFontSize),
                             ),
-                            const SizedBox(height: 8),
-                            _inlineLabeledCount(
-                              'E). Ibu Hamil',
-                              _ibuHamilController,
-                              'Orang',
-                            ),
-                            const SizedBox(height: 8),
-                            _inlineLabeledCount(
-                              'G). Lansia',
-                              _lansiaController,
-                              'Orang',
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _rwController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: 'RW',
+                                      hintStyle: const TextStyle(
+                                        color: _dotColor,
+                                        fontSize: _valueFontSize,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: _valueFontSize,
+                                    ),
+                                  ),
+                                  _dottedUnderline(),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        width: 180,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 12),
+                      _buildTwoColRow(
+                        label: 'Dusun / Lingk',
+                        right: Row(
                           children: [
-                            _inlineLabeledCount(
-                              'B). Plus',
-                              _pusController,
-                              'Pasang',
-                            ),
-                            const SizedBox(height: 8),
-                            _inlineLabeledCount(
-                              'D). Buta',
-                              _butaController,
-                              'Orang',
-                            ),
-                            const SizedBox(height: 8),
-                            _inlineLabeledCount(
-                              'F). Ibu Menyusui',
-                              _ibuMenyusuiController,
-                              'Orang',
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'H). Berkebutuhan Khusus',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontFamily: _fontFamily,
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _dusunController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Dusun',
+                                      hintStyle: const TextStyle(
+                                        color: _dotColor,
+                                        fontSize: _valueFontSize,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: _valueFontSize,
+                                    ),
+                                  ),
+                                  _dottedUnderline(),
+                                ],
                               ),
                             ),
-                            _checkboxOptionsInline(
-                              ['Fisik', 'Non Fisik'],
-                              _berkebutuhanKhusus,
-                              (value) =>
-                                  setState(() => _berkebutuhanKhusus = value),
+                            const SizedBox(width: 12),
+                            const Text(
+                              '/',
+                              style: TextStyle(fontSize: _valueFontSize),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _lingkunganController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Lingkungan',
+                                      hintStyle: const TextStyle(
+                                        color: _dotColor,
+                                        fontSize: _valueFontSize,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: _valueFontSize,
+                                    ),
+                                  ),
+                                  _dottedUnderline(),
+                                ],
+                              ),
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Desa pandak Kec Baturaden',
+                        style: TextStyle(fontSize: _valueFontSize),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Kab. Banyumas Prov. Jawa Tengah',
+                        style: TextStyle(fontSize: _valueFontSize),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _tambahAnggotaKeluarga,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Tambah Anggota'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    textStyle: const TextStyle(fontSize: 12),
+                // Nama Kepala Rumah Tangga
+                _buildDottedInput(
+                  'Nama Kepala Rumah Tangga',
+                  _namaKepalaRumahTanggaController,
+                  placeholder: 'Masukan Nama Kepala Rumah Tangga',
+                ),
+                const SizedBox(height: 20),
+
+                // Jumlah Anggota Keluarga
+                _buildTwoColRow(
+                  label: 'Jumlah Anggota Keluarga',
+                  right: Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _inlineCount(_jumlahAnggotaController, 'Orang'),
+                      _inlineLabeledCount(
+                        'Laki-laki',
+                        _jumlahLakiController,
+                        'Orang',
+                      ),
+                      _inlineLabeledCount(
+                        'Perempuan',
+                        _jumlahPerempuanController,
+                        'Orang',
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  'Total: ${_anggotaKeluarga.length} anggota',
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                const SizedBox(height: 16),
+
+                // Detail Jumlah
+                _indented(
+                  _buildCountWithUnit(
+                    '1. Jumlah KK',
+                    _jumlahKkController,
+                    'KK',
+                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-                width: 880,
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 1),
-                        color: const Color(0xFFF5F5F5),
-                      ),
+                const SizedBox(height: 8),
+                _indented(
+                  _buildTwoColRow(
+                    label: '2. Jumlah',
+                    right: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'NO',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                          SizedBox(
+                            width: 180,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _inlineLabeledCount(
+                                  'A). Balita',
+                                  _balitaController,
+                                  'Anak',
                                 ),
-                              ),
+                                const SizedBox(height: 8),
+                                _inlineLabeledCount(
+                                  'C). WUS',
+                                  _wusController,
+                                  'Orang',
+                                ),
+                                const SizedBox(height: 8),
+                                _inlineLabeledCount(
+                                  'E). Ibu Hamil',
+                                  _ibuHamilController,
+                                  'Orang',
+                                ),
+                                const SizedBox(height: 8),
+                                _inlineLabeledCount(
+                                  'G). Lansia',
+                                  _lansiaController,
+                                  'Orang',
+                                ),
+                              ],
                             ),
                           ),
-                          const Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'NO. REG',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 180,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _inlineLabeledCount(
+                                  'B). Plus',
+                                  _pusController,
+                                  'Pasang',
                                 ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Nama Anggota',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                                const SizedBox(height: 8),
+                                _inlineLabeledCount(
+                                  'D). Buta',
+                                  _butaController,
+                                  'Orang',
                                 ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Status Dlm Keluarga',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                                const SizedBox(height: 8),
+                                _inlineLabeledCount(
+                                  'F). Ibu Menyusui',
+                                  _ibuMenyusuiController,
+                                  'Orang',
                                 ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Status Dlm Perkawinan',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'H). Berkebutuhan Khusus',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontFamily: _fontFamily,
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Jenis Kelamin',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
+                                _checkboxOptionsInline(
+                                  ['Fisik', 'Non Fisik'],
+                                  _berkebutuhanKhusus,
+                                  (value) => setState(
+                                    () => _berkebutuhanKhusus = value,
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Tgl. Lahir / Umur',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Pendidikan',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Text(
-                                'Pekerjaan',
-                                style: TextStyle(
-                                  fontSize: _labelFontSize,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    if (_anggotaKeluarga.isEmpty)
-                      Container(
-                        height: 100,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            left: BorderSide(color: Colors.black, width: 1),
-                            right: BorderSide(color: Colors.black, width: 1),
-                            bottom: BorderSide(color: Colors.black, width: 1),
-                          ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Anggota Keluarga Table
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _tambahAnggotaKeluarga,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Tambah Anggota'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
-                        child: const Center(
-                          child: Text(
-                            'Belum menambahkan anggota',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                              fontFamily: _fontFamily,
-                            ),
-                          ),
-                        ),
+                        textStyle: const TextStyle(fontSize: 12),
                       ),
-                    if (_anggotaKeluarga.isNotEmpty)
-                      ..._anggotaKeluarga
-                          .map(
-                            (anggota) => Container(
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  left: BorderSide(
-                                    color: Colors.black,
-                                    width: 1,
-                                  ),
-                                  right: BorderSide(
-                                    color: Colors.black,
-                                    width: 1,
-                                  ),
-                                  bottom: BorderSide(
-                                    color: Colors.black,
-                                    width: 1,
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Total: ${_anggotaKeluarga.length} anggota',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    width: 880,
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 1),
+                            color: const Color(0xFFF5F5F5),
+                          ),
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                flex: 1,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'NO',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Text(
-                                        anggota.no.toString(),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
+                              const Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'NO. REG',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Nama Anggota',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Status Dlm Keluarga',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Status Dlm Perkawinan',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Jenis Kelamin',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Tgl. Lahir / Umur',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Pendidikan',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 3,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'Pekerjaan',
+                                    style: TextStyle(
+                                      fontSize: _labelFontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_anggotaKeluarga.isEmpty)
+                          Container(
+                            height: 100,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                left: BorderSide(color: Colors.black, width: 1),
+                                right: BorderSide(
+                                  color: Colors.black,
+                                  width: 1,
+                                ),
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Belum menambahkan anggota',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                  fontFamily: _fontFamily,
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (_anggotaKeluarga.isNotEmpty)
+                          ..._anggotaKeluarga
+                              .map(
+                                (anggota) => Container(
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      right: BorderSide(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      bottom: BorderSide(
+                                        color: Colors.black,
+                                        width: 1,
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.noReg,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Nomor Registrasi',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.nama,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Nama Anggota',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.statusKeluarga,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Status Dlm Keluarga',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.statusPerkawinan,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Status Dlm Perkawinan',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 6,
-                                      ),
-                                      child: Wrap(
-                                        spacing: 4,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        children: [
-                                          InkWell(
-                                            onTap: () => setState(
-                                              () => anggota.jenisKelamin =
-                                                  anggota.jenisKelamin == 'L'
-                                                  ? null
-                                                  : 'L',
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: Text(
+                                            anggota.no.toString(),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
                                             ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  width: 10,
-                                                  height: 10,
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                      color: Colors.black,
-                                                      width: 1,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          2,
-                                                        ),
-                                                    color: Colors.white,
-                                                  ),
-                                                  child:
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.noReg,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Nomor Registrasi',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.nama,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Nama Anggota',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.statusKeluarga,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Status Dlm Keluarga',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller:
+                                                anggota.statusPerkawinan,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Status Dlm Perkawinan',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // FIXED: Proper jenis kelamin checkbox with 'L'/'P' values
+                                      Expanded(
+                                        flex: 2,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 6,
+                                          ),
+                                          child: Wrap(
+                                            spacing: 4,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            children: [
+                                              InkWell(
+                                                onTap: () => setState(
+                                                  () => anggota.jenisKelamin =
                                                       anggota.jenisKelamin ==
                                                           'L'
-                                                      ? Center(
-                                                          child: Container(
-                                                            width: 6,
-                                                            height: 6,
-                                                            decoration:
-                                                                BoxDecoration(
+                                                      ? null
+                                                      : 'L',
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 10,
+                                                      height: 10,
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: Colors.black,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              2,
+                                                            ),
+                                                        color: Colors.white,
+                                                      ),
+                                                      child:
+                                                          anggota.jenisKelamin ==
+                                                              'L'
+                                                          ? Center(
+                                                              child: Container(
+                                                                width: 6,
+                                                                height: 6,
+                                                                decoration: BoxDecoration(
                                                                   color: Colors
                                                                       .black,
                                                                   borderRadius:
@@ -1349,53 +1531,54 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                                                         2,
                                                                       ),
                                                                 ),
-                                                          ),
-                                                        )
-                                                      : null,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                const Text(
-                                                  'L',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            onTap: () => setState(
-                                              () => anggota.jenisKelamin =
-                                                  anggota.jenisKelamin == 'P'
-                                                  ? null
-                                                  : 'P',
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  width: 10,
-                                                  height: 10,
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                      color: Colors.black,
-                                                      width: 1,
+                                                              ),
+                                                            )
+                                                          : null,
                                                     ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          2,
-                                                        ),
-                                                    color: Colors.white,
-                                                  ),
-                                                  child:
+                                                    const SizedBox(width: 4),
+                                                    const Text(
+                                                      'L',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              InkWell(
+                                                onTap: () => setState(
+                                                  () => anggota.jenisKelamin =
                                                       anggota.jenisKelamin ==
                                                           'P'
-                                                      ? Center(
-                                                          child: Container(
-                                                            width: 6,
-                                                            height: 6,
-                                                            decoration:
-                                                                BoxDecoration(
+                                                      ? null
+                                                      : 'P',
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 10,
+                                                      height: 10,
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: Colors.black,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              2,
+                                                            ),
+                                                        color: Colors.white,
+                                                      ),
+                                                      child:
+                                                          anggota.jenisKelamin ==
+                                                              'P'
+                                                          ? Center(
+                                                              child: Container(
+                                                                width: 6,
+                                                                height: 6,
+                                                                decoration: BoxDecoration(
                                                                   color: Colors
                                                                       .black,
                                                                   borderRadius:
@@ -1403,738 +1586,679 @@ class _TambahDataKeluargaPageState extends State<TambahDataKeluargaPage> {
                                                                         2,
                                                                       ),
                                                                 ),
-                                                          ),
-                                                        )
-                                                      : null,
+                                                              ),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    const Text(
+                                                      'P',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 4),
-                                                const Text(
-                                                  'P',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.tglUmur,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Tgl. Lahir / Umur',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.pendidikan,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Pendidikan',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: TextField(
+                                            controller: anggota.pekerjaan,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Pekerjaan',
+                                              hintStyle: TextStyle(
+                                                color: _dotColor,
+                                                fontSize: _valueFontSize,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: _valueFontSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 4,
+                                        ),
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                          onPressed: () =>
+                                              _hapusAnggotaKeluarga(anggota.id),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+                const Text(
+                  'Status Dalam Keluarga : Suami, Istri, Anak, Menantu, Keluarga, Dll',
+                  style: TextStyle(fontSize: _valueFontSize),
+                ),
+                const SizedBox(height: 20),
+
+                // Checklist Questions (unchanged - keeping all existing form elements)
+                _indented(
+                  _buildCheckboxGroup(
+                    '3. Makanan Pokok Sehari-hari',
+                    ['Beras', 'Non Beras'],
+                    _makananPokok,
+                    (v) => setState(() => _makananPokok = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildTwoColRow(
+                    label: '4. Mempunyai Jamban Keluarga',
+                    right: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            InkWell(
+                              onTap: () => setState(
+                                () => _jambanKeluarga = _jambanKeluarga == 'Ya'
+                                    ? null
+                                    : 'Ya',
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white,
+                                    ),
+                                    child: _jambanKeluarga == 'Ya'
+                                        ? Center(
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Ya',
+                                    style: TextStyle(fontSize: _valueFontSize),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => setState(
+                                () => _jambanKeluarga =
+                                    _jambanKeluarga == 'Tidak' ? null : 'Tidak',
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white,
+                                    ),
+                                    child: _jambanKeluarga == 'Tidak'
+                                        ? Center(
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Tidak',
+                                    style: TextStyle(fontSize: _valueFontSize),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_jambanKeluarga == 'Ya') ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Jumlah : ',
+                                style: TextStyle(fontSize: _valueFontSize),
+                              ),
+                              _inlineNumber(_jumlahJambanOrangController),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Orang',
+                                style: TextStyle(fontSize: _valueFontSize),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '5. Sumber Air Keluarga',
+                    ['PDAM', 'Sumur', 'Lainnya'],
+                    _sumberAir,
+                    (v) => setState(() => _sumberAir = v),
+                    rowAlign: CrossAxisAlignment.start,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '6. Memiliki Tempat Pembuangan Sampah',
+                    ['Ya', 'Tidak'],
+                    _tempatSampah,
+                    (v) => setState(() => _tempatSampah = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '7. Mempunyai Saluran Pembuangan Air Limbah',
+                    ['Ya', 'Tidak'],
+                    _saluranAirLimbah,
+                    (v) => setState(() => _saluranAirLimbah = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '8. Menempel Stiker P4K',
+                    ['Ya', 'Tidak'],
+                    _menempelStikerP4k,
+                    (v) => setState(() => _menempelStikerP4k = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '9. Kriteria Rumah',
+                    ['Sehat', 'Kurang Sehat'],
+                    _kriteriaRumah,
+                    (v) => setState(() => _kriteriaRumah = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildTwoColRow(
+                    label: '10. Aktivitas UP2K',
+                    rowAlign: CrossAxisAlignment.start,
+                    right: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 32,
+                          children: [
+                            InkWell(
+                              onTap: () => setState(
+                                () => _aktivitasUp2k = _aktivitasUp2k == 'Ya'
+                                    ? null
+                                    : 'Ya',
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white,
+                                    ),
+                                    child: _aktivitasUp2k == 'Ya'
+                                        ? Center(
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Ya',
+                                    style: TextStyle(fontSize: _valueFontSize),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => setState(
+                                () => _aktivitasUp2k = _aktivitasUp2k == 'Tidak'
+                                    ? null
+                                    : 'Tidak',
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white,
+                                    ),
+                                    child: _aktivitasUp2k == 'Tidak'
+                                        ? Center(
+                                            child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Tidak',
+                                    style: TextStyle(fontSize: _valueFontSize),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_aktivitasUp2k == 'Ya') ...[
+                          const SizedBox(height: 6),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Jenis Usaha',
+                                style: TextStyle(
+                                  fontSize: _valueFontSize,
+                                  fontFamily: _fontFamily,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  InkWell(
+                                    onTap: () => setState(
+                                      () => _jenisUsahaPilihan =
+                                          _jenisUsahaPilihan == 'Warung'
+                                          ? null
+                                          : 'Warung',
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 2,
+                                        horizontal: 2,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.black,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                              color: Colors.white,
+                                            ),
+                                            child:
+                                                _jenisUsahaPilihan == 'Warung'
+                                                ? Center(
+                                                    child: Container(
+                                                      width: 8,
+                                                      height: 8,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              2,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Warung',
+                                            style: TextStyle(
+                                              fontSize: _valueFontSize,
+                                              fontFamily: _fontFamily,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.tglUmur,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Tgl. Lahir / Umur',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
+                                  const SizedBox(height: 6),
+                                  InkWell(
+                                    onTap: () => setState(
+                                      () => _jenisUsahaPilihan =
+                                          _jenisUsahaPilihan ==
+                                              'Kegiatan Koperasi'
+                                          ? null
+                                          : 'Kegiatan Koperasi',
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
+                                    borderRadius: BorderRadius.circular(4),
                                     child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.pendidikan,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Pendidikan',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 2,
+                                        horizontal: 2,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.black,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                              color: Colors.white,
+                                            ),
+                                            child:
+                                                _jenisUsahaPilihan ==
+                                                    'Kegiatan Koperasi'
+                                                ? Center(
+                                                    child: Container(
+                                                      width: 8,
+                                                      height: 8,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              2,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : null,
                                           ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: TextField(
-                                        controller: anggota.pekerjaan,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Pekerjaan',
-                                          hintStyle: TextStyle(
-                                            color: _dotColor,
-                                            fontSize: _valueFontSize,
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Kegiatan Koperasi',
+                                            style: TextStyle(
+                                              fontSize: _valueFontSize,
+                                              fontFamily: _fontFamily,
+                                            ),
                                           ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: _valueFontSize,
-                                        ),
+                                        ],
                                       ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 4),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                        size: 20,
-                                      ),
-                                      onPressed: () =>
-                                          _hapusAnggotaKeluarga(anggota.id),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          )
-                          .toList(),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-            const Text(
-              'Status Dalam Keluarga : Suami, Istri, Anak, Menantu, Keluarga, Dll',
-              style: TextStyle(fontSize: _valueFontSize),
-            ),
-            const SizedBox(height: 20),
-
-            _indented(
-              _buildCheckboxGroup(
-                '3. Makanan Pokok Sehari-hari',
-                ['Beras', 'Non Beras'],
-                _makananPokok,
-                (v) => setState(() => _makananPokok = v),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildTwoColRow(
-                label: '4. Mempunyai Jamban Keluarga',
-                right: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        InkWell(
-                          onTap: () => setState(
-                            () => _jambanKeluarga = _jambanKeluarga == 'Ya'
-                                ? null
-                                : 'Ya',
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: Colors.white,
-                                  ),
-                                  child: _jambanKeluarga == 'Ya'
-                                      ? Center(
-                                          child: Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Ya',
-                                  style: TextStyle(fontSize: _valueFontSize),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => setState(
-                            () => _jambanKeluarga = _jambanKeluarga == 'Tidak'
-                                ? null
-                                : 'Tidak',
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: Colors.white,
-                                  ),
-                                  child: _jambanKeluarga == 'Tidak'
-                                      ? Center(
-                                          child: Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Tidak',
-                                  style: TextStyle(fontSize: _valueFontSize),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_jambanKeluarga == 'Ya') ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Jumlah : ',
-                            style: TextStyle(fontSize: _valueFontSize),
-                          ),
-                          _inlineNumber(_jumlahJambanOrangController),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'Orang',
-                            style: TextStyle(fontSize: _valueFontSize),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '5. Sumber Air Keluarga',
-                ['PDAM', 'Sumur', 'Lainnya'],
-                _sumberAir,
-                (v) => setState(() => _sumberAir = v),
-                rowAlign: CrossAxisAlignment.start,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '6. Memiliki Tempat Pembuangan Sampah',
-                ['Ya', 'Tidak'],
-                _tempatSampah,
-                (v) => setState(() => _tempatSampah = v),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '7. Mempunyai Saluran Pembuangan Air Limbah',
-                ['Ya', 'Tidak'],
-                _saluranAirLimbah,
-                (v) => setState(() => _saluranAirLimbah = v),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '8. Menempel Stiker P4K',
-                ['Ya', 'Tidak'],
-                _menempelStikerP4k,
-                (v) => setState(() => _menempelStikerP4k = v),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '9. Kriteria Rumah',
-                ['Sehat', 'Kurang Sehat'],
-                _kriteriaRumah,
-                (v) => setState(() => _kriteriaRumah = v),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildTwoColRow(
-                label: '10. Aktivitas UP2K',
-                rowAlign: CrossAxisAlignment.start,
-                right: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 32,
-                      children: [
-                        InkWell(
-                          onTap: () => setState(
-                            () => _aktivitasUp2k = _aktivitasUp2k == 'Ya'
-                                ? null
-                                : 'Ya',
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: Colors.white,
-                                  ),
-                                  child: _aktivitasUp2k == 'Ya'
-                                      ? Center(
-                                          child: Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Ya',
-                                  style: TextStyle(fontSize: _valueFontSize),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => setState(
-                            () => _aktivitasUp2k = _aktivitasUp2k == 'Tidak'
-                                ? null
-                                : 'Tidak',
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 2,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: Colors.white,
-                                  ),
-                                  child: _aktivitasUp2k == 'Tidak'
-                                      ? Center(
-                                          child: Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  'Tidak',
-                                  style: TextStyle(fontSize: _valueFontSize),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_aktivitasUp2k == 'Ya') ...[
-                      const SizedBox(height: 6),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Jenis Usaha',
-                            style: TextStyle(
-                              fontSize: _valueFontSize,
-                              fontFamily: _fontFamily,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              InkWell(
-                                onTap: () => setState(
-                                  () => _jenisUsahaPilihan =
-                                      _jenisUsahaPilihan == 'Warung'
-                                      ? null
-                                      : 'Warung',
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                    horizontal: 2,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: 1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                          color: Colors.white,
-                                        ),
-                                        child: _jenisUsahaPilihan == 'Warung'
-                                            ? Center(
-                                                child: Container(
-                                                  width: 8,
-                                                  height: 8,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          2,
-                                                        ),
-                                                  ),
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        'Warung',
-                                        style: TextStyle(
-                                          fontSize: _valueFontSize,
-                                          fontFamily: _fontFamily,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              InkWell(
-                                onTap: () => setState(
-                                  () => _jenisUsahaPilihan =
-                                      _jenisUsahaPilihan == 'Kegiatan Koperasi'
-                                      ? null
-                                      : 'Kegiatan Koperasi',
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                    horizontal: 2,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: 1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                          color: Colors.white,
-                                        ),
-                                        child:
-                                            _jenisUsahaPilihan ==
-                                                'Kegiatan Koperasi'
-                                            ? Center(
-                                                child: Container(
-                                                  width: 8,
-                                                  height: 8,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          2,
-                                                        ),
-                                                  ),
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        'Kegiatan Koperasi',
-                                        style: TextStyle(
-                                          fontSize: _valueFontSize,
-                                          fontFamily: _fontFamily,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _indented(
-              _buildCheckboxGroup(
-                '11. Aktivitas Kegiatan Usaha Kesehatan Lingkungan',
-                ['Layak', 'Tidak Layak'],
-                _aktivitasKegiatanKesehatan,
-                (v) => setState(() => _aktivitasKegiatanKesehatan = v),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            _SectionTitle('Pemanfaatan Tanah Perkarangan Hatinya PKK'),
-            const SizedBox(height: 8),
-            _LabeledInput(
-              label: 'Nama KRT',
-              controller: _namaKrtPerkaranganController,
-              placeholder: 'Masukan Nama KRT',
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-                width: 1000,
-                child: _EditableTable(
-                  key: _pemanfaatanTanahKey,
-                  headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
-                  initialRows: 6,
-                  presetKeterangan: const [
-                    'Peternakan',
-                    'Perikanan',
-                    'Warung Hidup',
-                    'Toga',
-                    'Lumbung Hidup',
-                    'Tanaman Keras',
-                  ],
-                  cellHeight: _tableCellHeight,
-                  initialData: _initialPemanfaatanTanah,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _SectionTitle('Industri Keluarga'),
-            const SizedBox(height: 8),
-            _LabeledInput(
-              label: 'Nama KRT',
-              controller: _namaKrtIndustriController,
-              placeholder: 'Masukan Nama KRT',
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-                width: 1000,
-                child: _EditableTable(
-                  key: _industriKeluargaKey,
-                  headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
-                  initialRows: 4,
-                  presetKeterangan: const [
-                    'Pangan',
-                    'Sandang',
-                    'Jasa',
-                    'Lain-lain',
-                  ],
-                  cellHeight: _tableCellHeight,
-                  initialData: _initialIndustriKeluarga,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (widget.initial != null)
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      if (widget.initial != null) {
-                        await _controller.deleteKeluarga(widget.initial!.id!);
-                      }
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    label: const Text('Hapus Data'),
-                  ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final pemanfaatanTanah = _pemanfaatanTanahKey.currentState
-                        ?.getData();
-                    final industriKeluarga = _industriKeluargaKey.currentState
-                        ?.getData();
-
-                    final data = Keluarga(
-                      id: widget.initial?.id,
-                      nama: _namaKepalaRumahTanggaController.text,
-                      mawar: _desaWismaController.text,
-                      jumlah: _jumlahAnggotaController.text,
-                      rt: _rtController.text,
-                      rw: _rwController.text,
-                      dusun: _dusunController.text,
-                      lingkungan: _lingkunganController.text,
-                      jumlahLaki: _jumlahLakiController.text,
-                      jumlahPerempuan: _jumlahPerempuanController.text,
-                      jumlahKk: _jumlahKkController.text,
-                      balita: _balitaController.text,
-                      pus: _pusController.text,
-                      wus: _wusController.text,
-                      buta: _butaController.text,
-                      ibuHamil: _ibuHamilController.text,
-                      ibuMenyusui: _ibuMenyusuiController.text,
-                      lansia: _lansiaController.text,
-                      lansiaKriteria: _lansiaKriteria,
-                      makananPokok: _makananPokok,
-                      jambanKeluarga: _jambanKeluarga,
-                      jumlahJamban: _jumlahJambanOrangController.text,
-                      sumberAir: _sumberAir,
-                      tempatSampah: _tempatSampah,
-                      saluranAirLimbah: _saluranAirLimbah,
-                      stikerP4k: _menempelStikerP4k,
-                      kriteriaRumah: _kriteriaRumah,
-                      aktivitasUp2k: _aktivitasUp2k,
-                      jenisUsaha: _jenisUsahaPilihan,
-                      aktivitasKesehatan: _aktivitasKegiatanKesehatan,
-                      namaKrtPerkarangan: _namaKrtPerkaranganController.text,
-                      namaKrtIndustri: _namaKrtIndustriController.text,
-                      berkebutuhanKhusus: _berkebutuhanKhusus,
-                      pemanfaatanTanah: pemanfaatanTanah != null
-                          ? jsonEncode(pemanfaatanTanah)
-                          : null,
-                      industriKeluarga: industriKeluarga != null
-                          ? jsonEncode(industriKeluarga)
-                          : null,
-                      anggotaKeluarga: _anggotaKeluarga.isNotEmpty
-                          ? jsonEncode(
-                              _anggotaKeluarga.map((e) => e.toMap()).toList(),
-                            )
-                          : null,
-                    );
-
-                    if (data.nama.isNotEmpty) {
-                      if (widget.initial == null) {
-                        await _controller.addKeluarga(data);
-                      } else {
-                        await _controller.updateKeluarga(data);
-                      }
-                    }
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C4A7C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      ],
                     ),
                   ),
-                  icon: const Icon(Icons.save_outlined, size: 20),
-                  label: const Text('Simpan Data'),
+                ),
+                const SizedBox(height: 12),
+                _indented(
+                  _buildCheckboxGroup(
+                    '11. Aktivitas Kegiatan Usaha Kesehatan Lingkungan',
+                    ['Layak', 'Tidak Layak'], // This is already correct
+                    _aktivitasKegiatanKesehatan,
+                    (v) => setState(() => _aktivitasKegiatanKesehatan = v),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Pemanfaatan Tanah Section
+                _SectionTitle('Pemanfaatan Tanah Perkarangan Hatinya PKK'),
+                const SizedBox(height: 8),
+                _LabeledInput(
+                  label: 'Nama KRT',
+                  controller: _namaKrtPerkaranganController,
+                  placeholder: 'Masukan Nama KRT',
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    width: 1000,
+                    child: _EditableTable(
+                      key: _pemanfaatanTanahKey,
+                      headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
+                      initialRows: 6,
+                      presetKeterangan: const [
+                        'Peternakan',
+                        'Perikanan',
+                        'Warung Hidup',
+                        'Toga',
+                        'Lumbung Hidup',
+                        'Tanaman Keras',
+                      ],
+                      cellHeight: _tableCellHeight,
+                      initialData: _initialPemanfaatanTanah,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Industri Keluarga Section
+                _SectionTitle('Industri Keluarga'),
+                const SizedBox(height: 8),
+                _LabeledInput(
+                  label: 'Nama KRT',
+                  controller: _namaKrtIndustriController,
+                  placeholder: 'Masukan Nama KRT',
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    width: 1000,
+                    child: _EditableTable(
+                      key: _industriKeluargaKey,
+                      headers: const ['No', 'Keterangan', 'Komoditi', 'Volume'],
+                      initialRows: 4,
+                      presetKeterangan: const [
+                        'Pangan',
+                        'Sandang',
+                        'Jasa',
+                        'Lain-lain',
+                      ],
+                      cellHeight: _tableCellHeight,
+                      initialData: _initialIndustriKeluarga,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (widget.initial != null)
+                      ElevatedButton.icon(
+                        onPressed: _hapusData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        label: const Text('Hapus Data'),
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _simpanData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2C4A7C),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(Icons.save_outlined, size: 20),
+                      label: const Text('Simpan Data'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
+// Helper Classes
+class _AnggotaRowData {
+  final int id;
+  int no;
+  final TextEditingController noReg = TextEditingController();
+  final TextEditingController nama = TextEditingController();
+  final TextEditingController statusKeluarga = TextEditingController();
+  final TextEditingController statusPerkawinan = TextEditingController();
+  String? jenisKelamin; // FIXED: Keep as 'L'/'P' for database compatibility
+  final TextEditingController tglUmur = TextEditingController();
+  final TextEditingController pendidikan = TextEditingController();
+  final TextEditingController pekerjaan = TextEditingController();
+
+  _AnggotaRowData({required this.id, required this.no});
+
+  void dispose() {
+    noReg.dispose();
+    nama.dispose();
+    statusKeluarga.dispose();
+    statusPerkawinan.dispose();
+    tglUmur.dispose();
+    pendidikan.dispose();
+    pekerjaan.dispose();
+  }
+}
+
 class _SectionTitle extends StatelessWidget {
   final String title;
+
   const _SectionTitle(this.title);
+
   @override
   Widget build(BuildContext context) {
     return Text(
@@ -2151,6 +2275,7 @@ class _LabeledInput extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String placeholder;
+
   const _LabeledInput({
     required this.label,
     required this.controller,
@@ -2230,14 +2355,14 @@ class _EditableTable extends StatefulWidget {
   final List<Map<String, dynamic>>? initialData;
 
   const _EditableTable({
-    super.key,
+    Key? key,
     required this.headers,
     this.initialRows = 1,
     this.cellHeight = 28,
     this.presetKeterangan,
     this.showJumlahRow = true,
     this.initialData,
-  });
+  }) : super(key: key);
 
   @override
   State<_EditableTable> createState() => _EditableTableState();
@@ -2252,38 +2377,36 @@ class _EditableTableState extends State<_EditableTable> {
   @override
   void initState() {
     super.initState();
+    _initializeRows();
+  }
+
+  void _initializeRows() {
     final int count = widget.presetKeterangan?.length ?? widget.initialRows;
     for (int i = 0; i < count; i++) {
       final row = _TableRowData();
-
-      if (widget.initialData != null && i < widget.initialData!.length) {
-        final data = widget.initialData![i];
-        if (data['keterangan'] != null)
-          row.keterangan.text = data['keterangan'];
-        if (data['komoditi'] != null) row.komoditi.text = data['komoditi'];
-        if (data['volume'] != null) row.volume.text = data['volume'];
-      }
-
       if (widget.presetKeterangan != null &&
           i < widget.presetKeterangan!.length) {
         row.keterangan.text = widget.presetKeterangan![i];
       }
+
+      // Populate dengan initial data jika ada
+      if (widget.initialData != null && i < widget.initialData!.length) {
+        final data = widget.initialData![i];
+        row.komoditi.text = data['komoditi'] ?? '';
+        row.volume.text = data['volume']?.toString() ?? '';
+      }
+
       row.volume.addListener(_recomputeVolume);
       _rows.add(row);
     }
-    _recomputeVolume();
-  }
 
-  List<Map<String, dynamic>> getData() {
-    return _rows
-        .map(
-          (r) => {
-            'keterangan': r.keterangan.text,
-            'komoditi': r.komoditi.text,
-            'volume': r.volume.text,
-          },
-        )
-        .toList();
+    // Populate jumlah komoditi jika ada initial data
+    if (widget.initialData != null && widget.initialData!.isNotEmpty) {
+      final firstData = widget.initialData!.first;
+      _jumlahKomoditiController.text = firstData['jumlah_komoditi'] ?? '';
+    }
+
+    _recomputeVolume();
   }
 
   @override
@@ -2305,6 +2428,21 @@ class _EditableTableState extends State<_EditableTable> {
       if (v != null) total += v;
     }
     setState(() => _volumeTotal = total);
+  }
+
+  // Method untuk mendapatkan data dari tabel
+  List<Map<String, dynamic>> getData() {
+    return _rows
+        .map(
+          (row) => {
+            'keterangan': row.keterangan.text,
+            'komoditi': row.komoditi.text,
+            'volume':
+                double.tryParse(row.volume.text.replaceAll(',', '.')) ?? 0,
+            'jumlah_komoditi': _jumlahKomoditiController.text,
+          },
+        )
+        .toList();
   }
 
   Widget _cell({
@@ -2406,6 +2544,7 @@ class _EditableTableState extends State<_EditableTable> {
                 child: _cell(
                   child: TextField(
                     controller: r.volume,
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       isDense: true,
@@ -2467,45 +2606,5 @@ class _TableRowData {
     keterangan.dispose();
     komoditi.dispose();
     volume.dispose();
-  }
-}
-
-class _AnggotaRowData {
-  int id;
-  int no;
-  final TextEditingController noReg = TextEditingController();
-  final TextEditingController nama = TextEditingController();
-  final TextEditingController statusKeluarga = TextEditingController();
-  final TextEditingController statusPerkawinan = TextEditingController();
-  String? jenisKelamin;
-  final TextEditingController tglUmur = TextEditingController();
-  final TextEditingController pendidikan = TextEditingController();
-  final TextEditingController pekerjaan = TextEditingController();
-
-  _AnggotaRowData({required this.id, required this.no});
-
-  void dispose() {
-    noReg.dispose();
-    nama.dispose();
-    statusKeluarga.dispose();
-    statusPerkawinan.dispose();
-    tglUmur.dispose();
-    pendidikan.dispose();
-    pekerjaan.dispose();
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'no': no,
-      'noReg': noReg.text,
-      'nama': nama.text,
-      'statusKeluarga': statusKeluarga.text,
-      'statusPerkawinan': statusPerkawinan.text,
-      'jenisKelamin': jenisKelamin,
-      'tglUmur': tglUmur.text,
-      'pendidikan': pendidikan.text,
-      'pekerjaan': pekerjaan.text,
-    };
   }
 }
