@@ -1,9 +1,62 @@
+//login_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'register_page.dart';
 import 'dashboard_page.dart';
+import '../controllers/auth_controller.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _rememberMe = false;
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_identifierController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      _showError('Mohon isi semua field');
+      return;
+    }
+
+    final authController = context.read<AuthController>();
+
+    final success = await authController.login(
+      identifier: _identifierController.text.trim(),
+      password: _passwordController.text.trim(),
+      rememberMe: _rememberMe,
+    );
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardPage()),
+      );
+    } else if (authController.error != null && mounted) {
+      _showError(authController.error!);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +75,7 @@ class LoginPage extends StatelessWidget {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -56,16 +106,10 @@ class LoginPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     _TextField(
+                      controller: _identifierController,
                       hint: 'Masukan NIK atau Email Google Anda',
-                      prefix: const Icon(
-                        Icons.assignment_ind,
-                        color: Colors.grey,
-                      ),
-                      suffix: const Icon(
-                        Icons.g_mobiledata,
-                        color: Colors.grey,
-                        size: 35,
-                      ),
+                      prefix: const Icon(Icons.assignment_ind, color: Colors.grey),
+                      suffix: const Icon(Icons.g_mobiledata, color: Colors.grey, size: 35),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -77,20 +121,46 @@ class LoginPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     _TextField(
+                      controller: _passwordController,
                       hint: 'Kata Sandi',
-                      obscure: true,
+                      obscure: _obscurePassword,
                       prefix: const Icon(Icons.key, color: Colors.grey),
-                      suffix: const Icon(Icons.visibility, color: Colors.grey),
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        Container(
-                          width: 18,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF1A3669)),
-                            borderRadius: BorderRadius.circular(2),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _rememberMe = !_rememberMe;
+                            });
+                          },
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: const Color(0xFF1A3669)),
+                              borderRadius: BorderRadius.circular(2),
+                              color: _rememberMe ? const Color(0xFF1A3669) : Colors.transparent,
+                            ),
+                            child: _rememberMe
+                                ? const Icon(
+                              Icons.check,
+                              size: 14,
+                              color: Colors.white,
+                            )
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -102,42 +172,55 @@ class LoginPage extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        const Text(
-                          'Lupa Kata Sandi?',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        InkWell(
+                          onTap: () {
+                            // TODO: Implement forgot password
+                            _showError('Fitur lupa password belum tersedia');
+                          },
+                          child: const Text(
+                            'Lupa Kata Sandi?',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A3669),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => const DashboardPage(),
+                    Consumer<AuthController>(
+                      builder: (context, authController, child) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A3669),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                          );
-                        },
-                        child: const Text(
-                          'Masuk',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            onPressed: authController.isLoading ? null : _handleLogin,
+                            child: authController.isLoading
+                                ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                                : const Text(
+                              'Masuk',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -145,9 +228,7 @@ class LoginPage extends StatelessWidget {
                       child: TextButton(
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterPage(),
-                            ),
+                            MaterialPageRoute(builder: (_) => const RegisterPage()),
                           );
                         },
                         child: const Text(
@@ -176,17 +257,20 @@ class _TextField extends StatelessWidget {
   final Widget? prefix;
   final Widget? suffix;
   final bool obscure;
+  final TextEditingController? controller;
 
   const _TextField({
     required this.hint,
     this.prefix,
     this.suffix,
     this.obscure = false,
+    this.controller,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
