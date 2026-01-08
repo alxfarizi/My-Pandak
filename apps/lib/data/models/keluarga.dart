@@ -1,156 +1,161 @@
+//keluarga.dart
 class Keluarga {
   final int? id;
-  final String nama; 
-  final String mawar; 
-  final String jumlah; 
-
+  final int? desaWismaId;
+  final String namaKepalaKeluarga;
   final String? rt;
   final String? rw;
   final String? dusun;
   final String? lingkungan;
-  final String? jumlahLaki;
-  final String? jumlahPerempuan;
-  final String? jumlahKk;
-  final String? balita;
-  final String? pus;
-  final String? wus;
-  final String? buta;
-  final String? ibuHamil;
-  final String? ibuMenyusui;
-  final String? lansia;
-  final String? lansiaKriteria;
+  final String? alamat;
+
+  // Statistik
+  final int jumlahAnggota;
+  final int jumlahLaki;
+  final int jumlahPerempuan;
+  final int jumlahKk;
+
+  // Data khusus
+  final int jumlahBalita;
+  final int jumlahPus;
+  final int jumlahWus;
+  final int jumlahButa;
+  final int jumlahIbuHamil;
+  final int jumlahIbuMenyusui;
+  final int jumlahLansia;
+  final String? kriteriaLansia;
+
+  // Fasilitas
   final String? makananPokok;
-  final String? jambanKeluarga;
-  final String? jumlahJamban;
+  final bool jambanKeluarga;
+  final int jumlahJambanOrang;
   final String? sumberAir;
-  final String? tempatSampah;
-  final String? saluranAirLimbah;
-  final String? stikerP4k;
+  final bool tempatSampah;
+  final bool saluranAirLimbah;
+  final bool stikerP4k;
   final String? kriteriaRumah;
-  final String? aktivitasUp2k;
-  final String? jenisUsaha;
-  final String? aktivitasKesehatan;
-  final String? namaKrtPerkarangan;
-  final String? namaKrtIndustri;
-  final String? berkebutuhanKhusus;
-  final String? pemanfaatanTanah;
-  final String? industriKeluarga; 
-  final String? anggotaKeluarga; 
+
+  // Aktivitas
+  final bool aktivitasUp2k;
+  final String? jenisUsahaUp2k;
+  final String? aktivitasKesehatanLingkungan;
+
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Keluarga({
     this.id,
-    required this.nama,
-    required this.mawar,
-    required this.jumlah,
+    this.desaWismaId,
+    required this.namaKepalaKeluarga,
     this.rt,
     this.rw,
     this.dusun,
     this.lingkungan,
-    this.jumlahLaki,
-    this.jumlahPerempuan,
-    this.jumlahKk,
-    this.balita,
-    this.pus,
-    this.wus,
-    this.buta,
-    this.ibuHamil,
-    this.ibuMenyusui,
-    this.lansia,
-    this.lansiaKriteria,
+    this.alamat,
+    this.jumlahAnggota = 0,
+    this.jumlahLaki = 0,
+    this.jumlahPerempuan = 0,
+    this.jumlahKk = 1,
+    this.jumlahBalita = 0,
+    this.jumlahPus = 0,
+    this.jumlahWus = 0,
+    this.jumlahButa = 0,
+    this.jumlahIbuHamil = 0,
+    this.jumlahIbuMenyusui = 0,
+    this.jumlahLansia = 0,
+    this.kriteriaLansia,
     this.makananPokok,
-    this.jambanKeluarga,
-    this.jumlahJamban,
+    this.jambanKeluarga = false,
+    this.jumlahJambanOrang = 0,
     this.sumberAir,
-    this.tempatSampah,
-    this.saluranAirLimbah,
-    this.stikerP4k,
+    this.tempatSampah = false,
+    this.saluranAirLimbah = false,
+    this.stikerP4k = false,
     this.kriteriaRumah,
-    this.aktivitasUp2k,
-    this.jenisUsaha,
-    this.aktivitasKesehatan,
-    this.namaKrtPerkarangan,
-    this.namaKrtIndustri,
-    this.berkebutuhanKhusus,
-    this.pemanfaatanTanah,
-    this.industriKeluarga,
-    this.anggotaKeluarga,
+    this.aktivitasUp2k = false,
+    this.jenisUsahaUp2k,
+    this.aktivitasKesehatanLingkungan,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'nama': nama,
-        'mawar': mawar,
-        'jumlah': jumlah,
-        'rt': rt,
-        'rw': rw,
-        'dusun': dusun,
-        'lingkungan': lingkungan,
-        'jumlahLaki': jumlahLaki,
-        'jumlahPerempuan': jumlahPerempuan,
-        'jumlahKk': jumlahKk,
-        'balita': balita,
-        'pus': pus,
-        'wus': wus,
-        'buta': buta,
-        'ibuHamil': ibuHamil,
-        'ibuMenyusui': ibuMenyusui,
-        'lansia': lansia,
-        'lansiaKriteria': lansiaKriteria,
-        'makananPokok': makananPokok,
-        'jambanKeluarga': jambanKeluarga,
-        'jumlahJamban': jumlahJamban,
-        'sumberAir': sumberAir,
-        'tempatSampah': tempatSampah,
-        'saluranAirLimbah': saluranAirLimbah,
-        'stikerP4k': stikerP4k,
-        'kriteriaRumah': kriteriaRumah,
-        'aktivitasUp2k': aktivitasUp2k,
-        'jenisUsaha': jenisUsaha,
-        'aktivitasKesehatan': aktivitasKesehatan,
-        'namaKrtPerkarangan': namaKrtPerkarangan,
-        'namaKrtIndustri': namaKrtIndustri,
-        'berkebutuhanKhusus': berkebutuhanKhusus,
-        'pemanfaatanTanah': pemanfaatanTanah,
-        'industriKeluarga': industriKeluarga,
-        'anggotaKeluarga': anggotaKeluarga,
-      };
+  factory Keluarga.fromJson(Map<String, dynamic> json) {
+    return Keluarga(
+      id: json['id'],
+      desaWismaId: json['desa_wisma_id'],
+      namaKepalaKeluarga: json['nama_kepala_keluarga'] ?? '',
+      rt: json['rt'],
+      rw: json['rw'],
+      dusun: json['dusun'],
+      lingkungan: json['lingkungan'],
+      alamat: json['alamat'],
+      jumlahAnggota: json['jumlah_anggota'] ?? 0,
+      jumlahLaki: json['jumlah_laki'] ?? 0,
+      jumlahPerempuan: json['jumlah_perempuan'] ?? 0,
+      jumlahKk: json['jumlah_kk'] ?? 1,
+      jumlahBalita: json['jumlah_balita'] ?? 0,
+      jumlahPus: json['jumlah_pus'] ?? 0,
+      jumlahWus: json['jumlah_wus'] ?? 0,
+      jumlahButa: json['jumlah_buta'] ?? 0,
+      jumlahIbuHamil: json['jumlah_ibu_hamil'] ?? 0,
+      jumlahIbuMenyusui: json['jumlah_ibu_menyusui'] ?? 0,
+      jumlahLansia: json['jumlah_lansia'] ?? 0,
+      kriteriaLansia: json['kriteria_lansia'],
+      makananPokok: json['makanan_pokok'],
+      jambanKeluarga: json['jamban_keluarga'] ?? false,
+      jumlahJambanOrang: json['jumlah_jamban_orang'] ?? 0,
+      sumberAir: json['sumber_air'],
+      tempatSampah: json['tempat_sampah'] ?? false,
+      saluranAirLimbah: json['saluran_air_limbah'] ?? false,
+      stikerP4k: json['stiker_p4k'] ?? false,
+      kriteriaRumah: json['kriteria_rumah'],
+      aktivitasUp2k: json['aktivitas_up2k'] ?? false,
+      jenisUsahaUp2k: json['jenis_usaha_up2k'],
+      aktivitasKesehatanLingkungan: json['aktivitas_kesehatan_lingkungan'],
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+    );
+  }
 
-  static Keluarga fromMap(Map<String, dynamic> m) => Keluarga(
-        id: m['id'] as int?,
-        nama: (m['nama'] ?? '') as String,
-        mawar: (m['mawar'] ?? '') as String,
-        jumlah: (m['jumlah'] ?? '') as String,
-        rt: m['rt'] as String?,
-        rw: m['rw'] as String?,
-        dusun: m['dusun'] as String?,
-        lingkungan: m['lingkungan'] as String?,
-        jumlahLaki: m['jumlahLaki'] as String?,
-        jumlahPerempuan: m['jumlahPerempuan'] as String?,
-        jumlahKk: m['jumlahKk'] as String?,
-        balita: m['balita'] as String?,
-        pus: m['pus'] as String?,
-        wus: m['wus'] as String?,
-        buta: m['buta'] as String?,
-        ibuHamil: m['ibuHamil'] as String?,
-        ibuMenyusui: m['ibuMenyusui'] as String?,
-        lansia: m['lansia'] as String?,
-        lansiaKriteria: m['lansiaKriteria'] as String?,
-        makananPokok: m['makananPokok'] as String?,
-        jambanKeluarga: m['jambanKeluarga'] as String?,
-        jumlahJamban: m['jumlahJamban'] as String?,
-        sumberAir: m['sumberAir'] as String?,
-        tempatSampah: m['tempatSampah'] as String?,
-        saluranAirLimbah: m['saluranAirLimbah'] as String?,
-        stikerP4k: m['stikerP4k'] as String?,
-        kriteriaRumah: m['kriteriaRumah'] as String?,
-        aktivitasUp2k: m['aktivitasUp2k'] as String?,
-        jenisUsaha: m['jenisUsaha'] as String?,
-        aktivitasKesehatan: m['aktivitasKesehatan'] as String?,
-        namaKrtPerkarangan: m['namaKrtPerkarangan'] as String?,
-        namaKrtIndustri: m['namaKrtIndustri'] as String?,
-        berkebutuhanKhusus: m['berkebutuhanKhusus'] as String?,
-        pemanfaatanTanah: m['pemanfaatanTanah'] as String?,
-        industriKeluarga: m['industriKeluarga'] as String?,
-        anggotaKeluarga: m['anggotaKeluarga'] as String?,
-      );
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'desa_wisma_id': desaWismaId,
+      'nama_kepala_keluarga': namaKepalaKeluarga,
+      'rt': rt,
+      'rw': rw,
+      'dusun': dusun,
+      'lingkungan': lingkungan,
+      'alamat': alamat,
+      'jumlah_anggota': jumlahAnggota,
+      'jumlah_laki': jumlahLaki,
+      'jumlah_perempuan': jumlahPerempuan,
+      'jumlah_kk': jumlahKk,
+      'jumlah_balita': jumlahBalita,
+      'jumlah_pus': jumlahPus,
+      'jumlah_wus': jumlahWus,
+      'jumlah_buta': jumlahButa,
+      'jumlah_ibu_hamil': jumlahIbuHamil,
+      'jumlah_ibu_menyusui': jumlahIbuMenyusui,
+      'jumlah_lansia': jumlahLansia,
+      'kriteria_lansia': kriteriaLansia,
+      'makanan_pokok': makananPokok,
+      'jamban_keluarga': jambanKeluarga,
+      'jumlah_jamban_orang': jumlahJambanOrang,
+      'sumber_air': sumberAir,
+      'tempat_sampah': tempatSampah,
+      'saluran_air_limbah': saluranAirLimbah,
+      'stiker_p4k': stikerP4k,
+      'kriteria_rumah': kriteriaRumah,
+      'aktivitas_up2k': aktivitasUp2k,
+      'jenis_usaha_up2k': jenisUsahaUp2k,
+      'aktivitas_kesehatan_lingkungan': aktivitasKesehatanLingkungan,
+    };
+
+    // PENTING: Jangan include 'id' saat insert baru
+    if (id != null) {
+      data['id'] = id;
+    }
+
+    return data;
+  }
 }
