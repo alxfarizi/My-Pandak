@@ -1,11 +1,17 @@
+//dashboard_page.dart - FINAL ENHANCED VERSION WITH GOOGLE MAPS
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // ADDED: Import Google Maps
 import 'data_warga_page.dart';
 import 'data_keluarga_page.dart';
 import 'catatan_keluarga_page.dart';
 import 'pengaturan_page.dart';
 import 'cetak_data_page.dart';
-import 'register_page.dart';
+import 'register_warga_page.dart';
+import '../controllers/dashboard_controller.dart';
+import '../controllers/auth_controller.dart';
+import '../services/user_integration_service.dart';
+import '../widgets/route_guard.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -15,6 +21,10 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  Map<String, dynamic> _userSummary = {};
+  bool _isLoadingUserSummary = true;
+
+  // ADDED: Google Maps configuration
   static final LatLng _desaPandakLocation = const LatLng(-7.37778, 109.24083);
   static final CameraPosition _cameraPosition = CameraPosition(
     target: _desaPandakLocation,
@@ -22,46 +32,114 @@ class _DashboardPageState extends State<DashboardPage> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDashboardData();
+    });
+  }
+
+  Future<void> _loadDashboardData() async {
+    final dashboardController = context.read<DashboardController>();
+
+    // Load dashboard stats
+    await dashboardController.loadDashboardStats();
+
+    // FIXED: Load user integration summary
+    await _loadUserSummary();
+  }
+
+  Future<void> _loadUserSummary() async {
+    setState(() {
+      _isLoadingUserSummary = true;
+    });
+
+    try {
+      final summary = await UserIntegrationService.getUserDashboardSummary();
+      setState(() {
+        _userSummary = summary;
+      });
+    } catch (e) {
+      print('Error loading user summary: $e');
+    } finally {
+      setState(() {
+        _isLoadingUserSummary = false;
+      });
+    }
+  }
+
+  // FIXED: Handle user sync action
+  Future<void> _handleUserSync() async {
+    try {
+      final success = await UserIntegrationService.autoFixUserIntegration();
+      if (success) {
+        _showSuccess('Data berhasil disinkronkan!');
+        await _loadUserSummary(); // Refresh summary
+      } else {
+        _showError('Gagal sinkronisasi data');
+      }
+    } catch (e) {
+      _showError('Error: $e');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void navigateToSettings(BuildContext ctx) {
+    Navigator.of(ctx).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+        const SettingsPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
+      ),
+    );
+  }
+
+  void navigateToCetakData(BuildContext ctx) {
+    Navigator.of(ctx).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+        const CetakDataPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
+      ),
+    );
+  }
+
+  void navigateToRegister(BuildContext ctx) {
+    Navigator.of(ctx).push(
+      MaterialPageRoute(
+        builder: (context) => RouteGuard(
+          allowedRoles: const ['Admin', 'Pengurus'],
+          child: const RegisterWargaPage(),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    void navigateToSettings(BuildContext ctx) {
-      Navigator.of(ctx).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const SettingsPage(),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              child,
-        ),
-      );
-    }
-
-    void navigateToCetakData(BuildContext ctx) {
-      Navigator.of(ctx).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const CetakDataPage(),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              child,
-        ),
-      );
-    }
-
-    void navigateToRegister(BuildContext ctx) {
-      Navigator.of(ctx).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const RegisterPage(),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              child,
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
@@ -70,26 +148,31 @@ class _DashboardPageState extends State<DashboardPage> {
         toolbarHeight: 100,
         automaticallyImplyLeading: false,
         titleSpacing: 20,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.person, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Hai, Agus !',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ],
+        title: Consumer<AuthController>(
+          builder: (context, authController, child) {
+            final userName = authController.userProfile?['nama_lengkap'] ?? 'User';
+            return Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Hai, $userName !',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         actions: [
           Container(
@@ -110,6 +193,10 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // FIXED: User status notification
+                if (!_isLoadingUserSummary && _userSummary['needsAttention'] == true)
+                  _buildUserAttentionCard(),
+
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -119,12 +206,17 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Selamat datang, Pengurus',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Consumer<AuthController>(
+                        builder: (context, authController, child) {
+                          final userRole = authController.userRole;
+                          return Text(
+                            'Selamat datang, $userRole',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 20),
                       Container(
@@ -133,30 +225,63 @@ class _DashboardPageState extends State<DashboardPage> {
                           color: const Color(0xFF2C4A7C),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _StatItem(
-                              icon: Icons.groups,
-                              count: '1.234',
-                              label: 'Total\nWarga',
-                            ),
-                            _StatItem(
-                              icon: Icons.group,
-                              count: '350',
-                              label: 'Kepala\nKeluarga',
-                            ),
-                            _StatItem(
-                              icon: Icons.family_restroom,
-                              count: '350',
-                              label: 'Total\nMenikah',
-                            ),
-                            _StatItem(
-                              icon: Icons.child_care,
-                              count: '150',
-                              label: 'Jumlah\nAnak',
-                            ),
-                          ],
+                        child: Consumer<DashboardController>(
+                          builder: (context, dashboardController, child) {
+                            if (dashboardController.isLoading) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (dashboardController.error != null) {
+                              return Center(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Error: ${dashboardController.error}',
+                                      style: const TextStyle(color: Colors.white),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    ElevatedButton(
+                                      onPressed: () => dashboardController.refresh(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _StatItem(
+                                  icon: Icons.groups,
+                                  count: '${dashboardController.totalAnggota}',
+                                  label: 'Total\nWarga',
+                                ),
+                                _StatItem(
+                                  icon: Icons.group,
+                                  count: '${dashboardController.totalKeluarga}',
+                                  label: 'Kepala\nKeluarga',
+                                ),
+                                _StatItem(
+                                  icon: Icons.family_restroom,
+                                  count: '${dashboardController.totalMenikah}',
+                                  label: 'Total\nMenikah',
+                                ),
+                                _StatItem(
+                                  icon: Icons.child_care,
+                                  count: '${dashboardController.totalBelumMenikah}',
+                                  label: 'Belum\nMenikah',
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -212,8 +337,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const CatatanKeluargaPage(),
+                                builder: (context) => const CatatanKeluargaPage(),
                               ),
                             ),
                           ),
@@ -240,6 +364,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
+                      // REPLACED: Google Maps implementation
                       Container(
                         height: 200,
                         decoration: BoxDecoration(
@@ -273,10 +398,162 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(
+      bottomNavigationBar: Consumer<AuthController>(
+        builder: (context, authController, child) {
+          if (authController.isWarga) {
+            return _buildWargaBottomNav(context);
+          } else {
+            return _buildPengurusBottomNav(context, authController.isPengurus);
+          }
+        },
+      ),
+    );
+  }
+
+  // FIXED: User attention card for sync issues
+  Widget _buildUserAttentionCard() {
+    final actionItems = _userSummary['actionItems'] as List<dynamic>? ?? [];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange[600]),
+              const SizedBox(width: 8),
+              const Text(
+                'Perhatian',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Ada beberapa hal yang perlu diselesaikan:',
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          ...actionItems.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                Expanded(child: Text(item.toString(), style: const TextStyle(fontSize: 13))),
+              ],
+            ),
+          )),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _handleUserSync,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.sync, size: 18),
+              label: const Text(
+                'Perbaiki Sekarang',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWargaBottomNav(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+        ],
+      ),
+      child: BottomNavigationBar(
         currentIndex: 0,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF2C4A7C),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.print),
+              label: 'Cetak Data'
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Pengaturan',
+          ),
+        ],
         onTap: (index) {
-          if (index == 0) return;
+          if (index == 0) return; // Already on dashboard
+          if (index == 1) {
+            navigateToCetakData(context);
+          } else if (index == 2) {
+            navigateToSettings(context);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPengurusBottomNav(BuildContext context, bool isPengurus) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 0,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF2C4A7C),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.print),
+              label: 'Cetak Data'
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.app_registration),
+            label: 'Registrasi',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Pengaturan',
+          ),
+        ],
+        onTap: (index) {
+          if (index == 0) return; // Already on dashboard
           if (index == 1) {
             navigateToCetakData(context);
           } else if (index == 2) {
@@ -365,48 +642,6 @@ class _MenuCard extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final int currentIndex;
-  final Function(int)? onTap;
-
-  const _BottomNav({required this.currentIndex, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2C4A7C),
-        unselectedItemColor: Colors.grey,
-        onTap: onTap,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.print), label: 'Cetak Data'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.app_registration),
-            label: 'Registrasi',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Pengaturan',
           ),
         ],
       ),

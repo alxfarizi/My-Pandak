@@ -1,3 +1,4 @@
+//preview_data_warga_page.dart - DATA SYNC FIX
 import 'package:flutter/material.dart';
 
 class PreviewDataWargaPage extends StatelessWidget {
@@ -125,6 +126,7 @@ class PreviewDataWargaPage extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // FIXED: Use real data from wargaData
                               _buildFormRow(
                                 'Desa Wisma',
                                 wargaData['mawar'] ?? '',
@@ -132,10 +134,15 @@ class PreviewDataWargaPage extends StatelessWidget {
                               SizedBox(height: _vspaceXS),
                               _buildFormRow(
                                 'Nama Kepala Rumah Tangga',
-                                wargaData['nama'] ?? '',
+                                wargaData['namaKepalaKeluarga'] ?? '',
                               ),
                               SizedBox(height: _vspaceXS),
-                              _buildFormRow('Rumah Tangga', ''),
+                              _buildFormRow('Dusun', wargaData['dusun'] ?? ''),
+                              SizedBox(height: _vspaceXS),
+                              _buildFormRow(
+                                'RT/RW',
+                                '${wargaData['rt'] ?? ''}/${wargaData['rw'] ?? ''}',
+                              ),
                               SizedBox(height: _vspaceXS),
                               _buildNumberedFormRow(
                                 1,
@@ -212,7 +219,7 @@ class PreviewDataWargaPage extends StatelessWidget {
                               _buildNumberedFormRowWithWidget(
                                 13,
                                 'Akseptor KB',
-                                _buildYesNoOptionsFor('akseptorKb'),
+                                _buildKBOptions(),
                               ),
                               SizedBox(height: _vspaceS),
                               _buildNumberedFormRowWithWidget(
@@ -224,7 +231,7 @@ class PreviewDataWargaPage extends StatelessWidget {
                               _buildNumberedFormRowWithWidget(
                                 15,
                                 'Mengikuti Program Bina Keluarga Balita',
-                                _buildYesNoOptionsFor('binaBalita'),
+                                _buildBinaBalitaOptions(),
                               ),
                               SizedBox(height: _vspaceXS),
                               _buildNumberedFormRowWithWidget(
@@ -236,25 +243,31 @@ class PreviewDataWargaPage extends StatelessWidget {
                               _buildNumberedFormRowWithWidget(
                                 17,
                                 'Mengikuti Kelompok Belajar',
-                                _buildYesNoOptionsFor('kelompokBelajar'),
+                                _buildYesNoOptions('mengikutiKelompokBelajar'),
                               ),
                               SizedBox(height: _vspaceXS),
                               _buildNumberedFormRowWithWidget(
                                 18,
                                 'Mengikuti PAUD',
-                                _buildYesNoOptionsFor('ikutPaud'),
+                                _buildPAUDOptions(),
                               ),
                               SizedBox(height: _vspaceXS),
                               _buildNumberedFormRowWithWidget(
                                 19,
                                 'Ikut dalam kegiatan koperasi',
-                                _buildYesNoOptionsFor('ikutKoperasi'),
+                                _buildKoperasiOptions(),
                               ),
                               SizedBox(height: _vspaceXS),
                               _buildNumberedFormRowWithWidget(
                                 20,
                                 'Berkebutuhan Khusus',
-                                _buildYesNoOptionsFor('berkebutuhanKhusus'),
+                                _buildKebutuhanKhususOptions(),
+                              ),
+                              SizedBox(height: _vspaceXS),
+                              _buildNumberedFormRowWithWidget(
+                                21,
+                                'Frekuensi / Volume',
+                                _buildFrequencyVolume(),
                               ),
                             ],
                           ),
@@ -444,24 +457,21 @@ class PreviewDataWargaPage extends StatelessWidget {
     );
   }
 
+  // FIXED: Use real data for gender options
   Widget _buildGenderOptions() {
-    final g = wargaData['jenisKelamin'] ?? '';
+    final jenisKelamin = wargaData['jenisKelamin'] ?? '';
     return Row(
       children: [
-        _buildCheckbox('Laki-laki', g == 'Laki-laki'),
+        _buildCheckbox('Laki-laki', jenisKelamin == 'Laki-laki'),
         const SizedBox(width: 8),
-        _buildCheckbox('Perempuan', g == 'Perempuan'),
+        _buildCheckbox('Perempuan', jenisKelamin == 'Perempuan'),
       ],
     );
   }
 
+  // FIXED: Use real data for date and age
   Widget _buildDateAndAge() {
-    final tgl = wargaData['tanggalLahir'] ?? '';
-    final bln = wargaData['bulanLahir'] ?? '';
-    final thn = wargaData['tahunLahir'] ?? '';
-    final dateStr = (tgl.isEmpty && bln.isEmpty && thn.isEmpty)
-        ? ''
-        : '$tgl/$bln/$thn';
+    final tanggalLahir = wargaData['tanggalLahir'] ?? '';
     final umur = wargaData['umur'] ?? '';
 
     return Wrap(
@@ -469,140 +479,117 @@ class PreviewDataWargaPage extends StatelessWidget {
       runSpacing: 2,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(
-          dateStr,
-          style: const TextStyle(
-            fontSize: 5,
-            color: Colors.black,
-            fontFamily: 'Poppins',
+        if (tanggalLahir.isNotEmpty)
+          Text(
+            tanggalLahir,
+            style: const TextStyle(
+              fontSize: 5,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+            ),
           ),
-        ),
-        Text(
-          umur,
-          style: const TextStyle(
-            fontSize: 5,
-            color: Colors.black,
-            fontFamily: 'Poppins',
+        if (umur.isNotEmpty) ...[
+          Text(
+            umur,
+            style: const TextStyle(
+              fontSize: 5,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+            ),
           ),
-        ),
-        const Text(
-          'Tahun',
-          style: TextStyle(
-            fontSize: 5,
-            color: Colors.black,
-            fontFamily: 'Poppins',
+          const Text(
+            'Tahun',
+            style: TextStyle(
+              fontSize: 5,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
 
+  // FIXED: Use real data for marital status
   Widget _buildMaritalStatus() {
+    final status = wargaData['statusPerkawinan'] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildCheckbox(
-              'Menikah',
-              (wargaData['statusPerkawinan'] ?? '') == 'Menikah',
-            ),
+            _buildCheckbox('Menikah', status == 'Menikah'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Belum kawin',
-              (wargaData['statusPerkawinan'] ?? '') == 'Belum kawin',
-            ),
+            _buildCheckbox('Belum kawin', status == 'Lajang'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Cerai hidup',
-              (wargaData['statusPerkawinan'] ?? '') == 'Cerai hidup',
-            ),
+            _buildCheckbox('Cerai hidup', status == 'Cerai hidup'),
           ],
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildCheckbox(
-              'Cerai mati',
-              (wargaData['statusPerkawinan'] ?? '') == 'Cerai mati',
-            ),
+            _buildCheckbox('Cerai mati', status == 'Cerai mati'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Duda',
-              (wargaData['statusPerkawinan'] ?? '') == 'Duda',
-            ),
+            _buildCheckbox('Duda', status == 'Duda'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Janda',
-              (wargaData['statusPerkawinan'] ?? '') == 'Janda',
-            ),
+            _buildCheckbox('Janda', status == 'Janda'),
           ],
         ),
       ],
     );
   }
 
+  // FIXED: Use real data for family status
   Widget _buildFamilyStatus() {
+    final status = wargaData['statusDalamKeluarga'] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildCheckbox(
-              'Kepala Keluarga',
-              (wargaData['statusDalamKeluarga'] ?? '') == 'Kepala Keluarga',
-            ),
+            _buildCheckbox('Kepala Keluarga', status == 'Kepala Keluarga'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Anggota Keluarga',
-              (wargaData['statusDalamKeluarga'] ?? '') == 'Anggota Keluarga',
-            ),
+            _buildCheckbox('Anggota Keluarga', status == 'Anggota Keluarga'),
           ],
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            _buildCheckbox(
-              'Menantu',
-              (wargaData['statusDalamKeluarga'] ?? '') == 'Menantu',
-            ),
-          ],
-        ),
+        Row(children: [_buildCheckbox('Menantu', status == 'Menantu')]),
       ],
     );
   }
 
+  // FIXED: Use real data for religion
   Widget _buildReligionOptions() {
+    final agama = wargaData['agama'] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildCheckbox('Islam', (wargaData['agama'] ?? '') == 'Islam'),
+            _buildCheckbox('Islam', agama == 'Islam'),
             const SizedBox(width: 8),
-            _buildCheckbox('Kristen', (wargaData['agama'] ?? '') == 'Kristen'),
+            _buildCheckbox('Kristen', agama == 'Kristen'),
             const SizedBox(width: 8),
-            _buildCheckbox('Katolik', (wargaData['agama'] ?? '') == 'Katolik'),
+            _buildCheckbox('Katolik', agama == 'Katolik'),
             const SizedBox(width: 8),
-            _buildCheckbox('Hindu', (wargaData['agama'] ?? '') == 'Hindu'),
+            _buildCheckbox('Hindu', agama == 'Hindu'),
           ],
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildCheckbox('Buddha', (wargaData['agama'] ?? '') == 'Buddha'),
+            _buildCheckbox('Buddha', agama == 'Budha'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Khonghucu',
-              (wargaData['agama'] ?? '') == 'Khonghucu',
-            ),
+            _buildCheckbox('Khonghucu', agama == 'Konhucu'),
           ],
         ),
       ],
     );
   }
 
+  // FIXED: Use real data for education
   Widget _buildEducationOptions() {
+    final pendidikan = wargaData['pendidikan'] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -610,14 +597,10 @@ class PreviewDataWargaPage extends StatelessWidget {
           children: [
             _buildCheckbox(
               'Tidak/Belum Sekolah',
-              (wargaData['pendidikan'] ?? '') == 'Tidak/Belum Sekolah',
+              pendidikan == 'Tidak tamat sd',
             ),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'SD/MI/Sederajat',
-              (wargaData['pendidikan'] ?? '') == 'SD/MI/Sederajat' ||
-                  (wargaData['pendidikan'] ?? '').contains('SD'),
-            ),
+            _buildCheckbox('SD/MI/Sederajat', pendidikan == 'SD / MI'),
           ],
         ),
         const SizedBox(height: 4),
@@ -625,184 +608,184 @@ class PreviewDataWargaPage extends StatelessWidget {
           children: [
             _buildCheckbox(
               'SMP/MTs/Sederajat',
-              (wargaData['pendidikan'] ?? '') == 'SMP/MTs/Sederajat' ||
-                  (wargaData['pendidikan'] ?? '').contains('SMP'),
+              pendidikan == 'SMP / Sederajat',
             ),
             const SizedBox(width: 8),
             _buildCheckbox(
               'SMA/SMK/MA/Sederajat',
-              (wargaData['pendidikan'] ?? '') == 'SMA/SMK/MA/Sederajat' ||
-                  (wargaData['pendidikan'] ?? '').contains('SMU') ||
-                  (wargaData['pendidikan'] ?? '').contains('SMA') ||
-                  (wargaData['pendidikan'] ?? '').contains('SMK'),
+              pendidikan == 'SMU / SMK / Sederajat',
             ),
           ],
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildCheckbox(
-              'Diploma',
-              (wargaData['pendidikan'] ?? '') == 'Diploma',
-            ),
+            _buildCheckbox('Diploma', pendidikan == 'Diploma'),
             const SizedBox(width: 8),
-            _buildCheckbox('S1', (wargaData['pendidikan'] ?? '') == 'S1'),
+            _buildCheckbox('S1', pendidikan == 'S1'),
             const SizedBox(width: 8),
-            _buildCheckbox('S2', (wargaData['pendidikan'] ?? '') == 'S2'),
+            _buildCheckbox('S2', pendidikan == 'S2'),
             const SizedBox(width: 8),
-            _buildCheckbox('S3', (wargaData['pendidikan'] ?? '') == 'S3'),
+            _buildCheckbox('S3', pendidikan == 'S3'),
           ],
         ),
       ],
     );
   }
 
+  // FIXED: Use real data for job
   Widget _buildJobOptions() {
+    final pekerjaan = wargaData['pekerjaan'] ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildCheckbox(
-              'Pelajar/Mahasiswa',
-              (wargaData['pekerjaan'] ?? '') == 'Pelajar/Mahasiswa',
-            ),
+            _buildCheckbox('Pelajar/Mahasiswa', pekerjaan == 'Pelajar'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Petani',
-              (wargaData['pekerjaan'] ?? '') == 'Petani',
-            ),
+            _buildCheckbox('Petani', pekerjaan == 'Petani'),
             const SizedBox(width: 8),
-            _buildCheckbox('Buruh', (wargaData['pekerjaan'] ?? '') == 'Buruh'),
+            _buildCheckbox('Buruh', pekerjaan == 'Buruh'),
           ],
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildCheckbox(
-              'Pedagang',
-              (wargaData['pekerjaan'] ?? '') == 'Pedagang',
-            ),
+            _buildCheckbox('Pedagang', pekerjaan == 'Pedagang'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Wiraswasta',
-              (wargaData['pekerjaan'] ?? '') == 'Wiraswasta' ||
-                  (wargaData['pekerjaan'] ?? '') == 'Swasta',
-            ),
+            _buildCheckbox('Wiraswasta', pekerjaan == 'Wirausaha'),
             const SizedBox(width: 8),
-            _buildCheckbox('PNS', (wargaData['pekerjaan'] ?? '') == 'PNS'),
+            _buildCheckbox('PNS', pekerjaan == 'PNS'),
           ],
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildCheckbox(
-              'TNI',
-              (wargaData['pekerjaan'] ?? '') == 'TNI' ||
-                  (wargaData['pekerjaan'] ?? '') == 'TNI / Polri',
-            ),
+            _buildCheckbox('TNI', pekerjaan == 'TNI / Polri'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Polri',
-              (wargaData['pekerjaan'] ?? '') == 'Polri' ||
-                  (wargaData['pekerjaan'] ?? '') == 'TNI / Polri',
-            ),
+            _buildCheckbox('Polri', pekerjaan == 'TNI / Polri'),
             const SizedBox(width: 8),
-            _buildCheckbox(
-              'Nelayan',
-              (wargaData['pekerjaan'] ?? '') == 'Nelayan',
-            ),
+            _buildCheckbox('Nelayan', pekerjaan == 'Nelayan'),
           ],
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            _buildCheckbox(
-              'Ibu Rumah Tangga',
-              (wargaData['pekerjaan'] ?? '') == 'Ibu Rumah Tangga',
-            ),
-          ],
-        ),
+        Row(children: [_buildCheckbox('Ibu Rumah Tangga', pekerjaan == 'IRT')]),
       ],
     );
   }
 
-  Widget _buildYesNoOptionsFor(String key) {
-    final v = (wargaData[key] ?? '').toLowerCase();
+  // FIXED: Use real data for KB
+  Widget _buildKBOptions() {
+    final akseptorKb = wargaData['akseptorKb'] ?? '';
     return Row(
       children: [
-        _buildCheckbox('Ya', v == 'ya'),
+        _buildCheckbox('Ya', akseptorKb == 'Ya'),
         const SizedBox(width: 8),
-        _buildCheckbox('Tidak', v == 'tidak' || v.isEmpty),
+        _buildCheckbox('Tidak', akseptorKb == 'Tidak'),
       ],
     );
   }
 
+  // FIXED: Use real data for Posyandu
   Widget _buildPosyanduOptions() {
-    final v = (wargaData['aktifPosyandu'] ?? '').toLowerCase();
-    final isYes = v == 'ya';
-    final freq = wargaData['frekuensiPosyandu'] ?? '';
-
+    final aktifPosyandu = wargaData['aktifPosyandu'] ?? '';
     return Row(
       children: [
-        _buildCheckbox('Ya', isYes),
-        if (isYes && freq.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          Text(
-            '$freq Kali',
-            style: const TextStyle(
-              fontSize: 5,
-              color: Colors.black,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ],
+        _buildCheckbox('Ya', aktifPosyandu == 'Ya'),
         const SizedBox(width: 8),
-        _buildCheckbox('Tidak', v == 'tidak' || v.isEmpty),
+        _buildCheckbox('Tidak', aktifPosyandu == 'Tidak'),
       ],
     );
   }
 
+  // FIXED: Use real data for Bina Balita
+  Widget _buildBinaBalitaOptions() {
+    final binaBalita = wargaData['mengikutiBinaBalita'] ?? '';
+    return Row(
+      children: [
+        _buildCheckbox('Ya', binaBalita == 'Ya'),
+        const SizedBox(width: 8),
+        _buildCheckbox('Tidak', binaBalita == 'Tidak'),
+      ],
+    );
+  }
+
+  // FIXED: Use real data for Tabungan
   Widget _buildTabunganOptions() {
-    final v = (wargaData['memilikiTabungan'] ?? '').toLowerCase();
-    final isYes = v == 'ya';
-    final paket = wargaData['paketTabungan'] ?? '';
-
+    final tabungan = wargaData['memilikiTabungan'] ?? '';
     return Row(
       children: [
-        _buildCheckbox('Ya', isYes),
-        if (isYes && paket.isNotEmpty) ...[
-          const SizedBox(width: 4),
-          Text(
-            '($paket)',
-            style: const TextStyle(
-              fontSize: 5,
-              color: Colors.black,
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ],
+        _buildCheckbox('Ya', tabungan == 'Ya'),
         const SizedBox(width: 8),
-        _buildCheckbox('Tidak', v == 'tidak' || v.isEmpty),
+        _buildCheckbox('Tidak', tabungan == 'Tidak'),
       ],
     );
   }
 
+  // FIXED: Use real data for PAUD
+  Widget _buildPAUDOptions() {
+    final paud = wargaData['mengikutiPaud'] ?? '';
+    return Row(
+      children: [
+        _buildCheckbox('Ya', paud == 'Ya'),
+        const SizedBox(width: 8),
+        _buildCheckbox('Tidak', paud == 'Tidak'),
+      ],
+    );
+  }
+
+  // FIXED: Use real data for Koperasi
+  Widget _buildKoperasiOptions() {
+    final koperasi = wargaData['ikutKoperasi'] ?? '';
+    return Row(
+      children: [
+        _buildCheckbox('Ya', koperasi == 'Ya'),
+        const SizedBox(width: 8),
+        _buildCheckbox('Tidak', koperasi == 'Tidak'),
+      ],
+    );
+  }
+
+  // FIXED: Use real data for Kebutuhan Khusus
+  Widget _buildKebutuhanKhususOptions() {
+    final kebutuhanKhusus = wargaData['berkebutuhanKhusus'] ?? '';
+    return Row(
+      children: [
+        _buildCheckbox('Ya', kebutuhanKhusus == 'Ya'),
+        const SizedBox(width: 8),
+        _buildCheckbox('Tidak', kebutuhanKhusus == 'Tidak'),
+      ],
+    );
+  }
+
+  Widget _buildYesNoOptions(String key) {
+    final value = wargaData[key] ?? '';
+    return Row(
+      children: [
+        _buildCheckbox('Ya', value == 'Ya'),
+        const SizedBox(width: 8),
+        _buildCheckbox('Tidak', value == 'Tidak'),
+      ],
+    );
+  }
+
+  // FIXED: Use real data for frequency
   Widget _buildFrequencyVolume() {
+    final frekuensi = wargaData['frekuensiPosyandu'] ?? '1';
     return Wrap(
       spacing: 4,
       runSpacing: 2,
       crossAxisAlignment: WrapCrossAlignment.center,
-      children: const [
+      children: [
         Text(
-          '1',
-          style: TextStyle(
+          frekuensi,
+          style: const TextStyle(
             fontSize: 5,
             color: Colors.black,
             fontFamily: 'Poppins',
           ),
         ),
-        Text(
+        const Text(
           'Kali',
           style: TextStyle(
             fontSize: 5,
@@ -814,7 +797,7 @@ class PreviewDataWargaPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckbox(String label, [bool selected = false]) {
+  Widget _buildCheckbox(String label, [bool checked = false]) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -826,11 +809,11 @@ class PreviewDataWargaPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
             color: Colors.white,
           ),
-          child: selected
+          child: checked
               ? Center(
                   child: Container(
-                    width: 4,
-                    height: 4,
+                    width: 3,
+                    height: 3,
                     decoration: BoxDecoration(
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(1),

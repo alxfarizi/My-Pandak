@@ -1,7 +1,8 @@
+//cetak_data_data_warga_page.dart - TYPE FIX
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'preview_data_warga_page.dart';
-import '../controllers/warga_controller.dart';
-import '../data/models/warga.dart';
+import '../controllers/anggota_keluarga_controller.dart';
 
 class CetakDataWargaPage extends StatefulWidget {
   const CetakDataWargaPage({super.key});
@@ -11,18 +12,36 @@ class CetakDataWargaPage extends StatefulWidget {
 }
 
 class _CetakDataWargaPageState extends State<CetakDataWargaPage> {
-  final WargaController _controller = WargaController();
-  List<Warga> _wargaData = [];
-
   @override
   void initState() {
     super.initState();
-    _load();
+    // Load data when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AnggotaKeluargaController>().loadAllAnggotaWithKeluarga();
+    });
   }
 
-  Future<void> _load() async {
-    final rows = await _controller.loadWarga();
-    setState(() => _wargaData = rows);
+  // Helper method untuk format tanggal lahir
+  String _formatTanggalLahir(DateTime? tanggalLahir, int? umur) {
+    if (tanggalLahir != null) {
+      return '${tanggalLahir.day.toString().padLeft(2, '0')}/${tanggalLahir.month.toString().padLeft(2, '0')}/${tanggalLahir.year}';
+    }
+    if (umur != null) {
+      return '$umur tahun';
+    }
+    return '';
+  }
+
+  // Helper method untuk format jenis kelamin
+  String _formatJenisKelamin(String? jenisKelamin) {
+    if (jenisKelamin == 'L') return 'Laki-laki';
+    if (jenisKelamin == 'P') return 'Perempuan';
+    return jenisKelamin ?? '';
+  }
+
+  // FIXED: Helper method untuk convert dynamic value ke string
+  String _safeToString(dynamic value) {
+    return value?.toString() ?? '';
   }
 
   @override
@@ -86,12 +105,39 @@ class _CetakDataWargaPageState extends State<CetakDataWargaPage> {
                   ),
                 ),
                 Expanded(
-                  child: _wargaData.isEmpty
-                      ? Center(
+                  child: Consumer<AnggotaKeluargaController>(
+                    builder: (context, anggotaController, child) {
+                      if (anggotaController.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (anggotaController.error != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Error: ${anggotaController.error}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    anggotaController.refreshWithKeluarga(),
+                                child: const Text('Coba Lagi'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (anggotaController.anggotaWithKeluargaList.isEmpty) {
+                        return const Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: const Text(
-                              'Belum ada data yang tersedia sehingga belum bisa review data warga',
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              'Belum ada data warga yang tersedia',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Color(0xFFA0A0A0),
@@ -100,120 +146,199 @@ class _CetakDataWargaPageState extends State<CetakDataWargaPage> {
                               ),
                             ),
                           ),
-                        )
-                      : SingleChildScrollView(
+                        );
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh: () =>
+                            anggotaController.refreshWithKeluarga(),
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
-                              children: [
-                                ..._wargaData.map(
-                                  (w) => GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              PreviewDataWargaPage(
-                                                wargaData: {
-                                                  'nama': w.nama,
-                                                  'mawar': w.mawar,
-                                                  'nik': w.nik,
-                                                  'jabatan': w.jabatan ?? '',
-                                                  'tempatLahir':
-                                                      w.tempatLahir ?? '',
-                                                  'alamat': w.alamat ?? '',
-                                                  'jenisKelamin':
-                                                      w.jenisKelamin ?? '',
-                                                  'statusPerkawinan':
-                                                      w.statusPerkawinan ?? '',
-                                                  'statusDalamKeluarga':
-                                                      w.statusDalamKeluarga ??
-                                                      '',
-                                                  'agama': w.agama ?? '',
-                                                  'pendidikan':
-                                                      w.pendidikan ?? '',
-                                                  'pekerjaan':
-                                                      w.pekerjaan ?? '',
-                                                  'akseptorKb':
-                                                      w.akseptorKb ?? '',
-                                                  'aktifPosyandu':
-                                                      w.aktifPosyandu ?? '',
-                                                  'binaBalita':
-                                                      w.binaBalita ?? '',
-                                                  'memilikiTabungan':
-                                                      w.memilikiTabungan ?? '',
-                                                  'paketTabungan':
-                                                      w.paketTabungan ?? '',
-                                                  'ikutPaud': w.ikutPaud ?? '',
-                                                  'ikutKoperasi':
-                                                      w.ikutKoperasi ?? '',
-                                                  'berkebutuhanKhusus':
-                                                      w.berkebutuhanKhusus ??
-                                                      '',
-                                                  'tanggalLahir':
-                                                      w.tanggalLahir ?? '',
-                                                  'bulanLahir':
-                                                      w.bulanLahir ?? '',
-                                                  'tahunLahir':
-                                                      w.tahunLahir ?? '',
-                                                  'umur': w.umur ?? '',
-                                                  'frekuensiPosyandu':
-                                                      w.frekuensiPosyandu ?? '',
-                                                },
-                                              ),
+                              children: anggotaController
+                                  .anggotaWithKeluargaList
+                                  .map((wargaWithKeluarga) {
+                                    final warga = wargaWithKeluarga['anggota'];
+                                    final keluarga =
+                                        wargaWithKeluarga['keluarga']
+                                            as Map<String, dynamic>?;
+                                    final desaWisma =
+                                        wargaWithKeluarga['desa_wisma']
+                                            as Map<String, dynamic>?;
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        // FIXED: Convert all values to String untuk Map<String, String>
+                                        final wargaMap = <String, String>{
+                                          // Basic info
+                                          'nama': warga?.nama ?? '',
+                                          'nik': warga?.nik ?? 'Belum ada NIK',
+                                          'noRegistrasi':
+                                              warga?.noRegistrasi ?? '',
+                                          'jabatan': warga?.jabatan ?? '',
+
+                                          // Personal info
+                                          'jenisKelamin': _formatJenisKelamin(
+                                            warga?.jenisKelamin,
+                                          ),
+                                          'tempatLahir':
+                                              warga?.tempatLahir ?? '',
+                                          'tanggalLahir': _formatTanggalLahir(
+                                            warga?.tanggalLahir,
+                                            warga?.umur,
+                                          ),
+                                          'umur': _safeToString(warga?.umur),
+                                          'statusPerkawinan':
+                                              warga?.statusPerkawinan ?? '',
+                                          'statusDalamKeluarga':
+                                              warga?.statusDalamKeluarga ?? '',
+                                          'agama': warga?.agama ?? '',
+
+                                          // Address info
+                                          'alamat': warga?.alamatDetail ?? '',
+                                          'statusTinggal':
+                                              warga?.statusTinggal ?? '',
+                                          'desaKelurahan':
+                                              warga?.desaKelurahan ?? '',
+                                          'kabupatenKota':
+                                              warga?.kabupatenKota ?? '',
+
+                                          // Education & work
+                                          'pendidikan': warga?.pendidikan ?? '',
+                                          'pekerjaan': warga?.pekerjaan ?? '',
+
+                                          // Health & social programs
+                                          'akseptorKb':
+                                              warga?.akseptorKb == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'jenisAkseptorKb':
+                                              warga?.jenisAkseptorKb ?? '',
+                                          'aktifPosyandu':
+                                              warga?.aktifPosyandu == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'frekuensiPosyandu': _safeToString(
+                                            warga?.frekuensiPosyandu ?? 0,
+                                          ),
+                                          'mengikutiBinaBalita':
+                                              warga?.mengikutiBinaBalita == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'memilikiTabungan':
+                                              warga?.memilikiTabungan == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'jenisPaketTabungan':
+                                              warga?.jenisPaketTabungan ?? '',
+                                          'mengikutiPaud':
+                                              warga?.mengikutiPaud == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'ikutKoperasi':
+                                              warga?.ikutKoperasi == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+                                          'berkebutuhanKhusus':
+                                              warga?.berkebutuhanKhusus == true
+                                              ? 'Ya'
+                                              : 'Tidak',
+
+                                          // Family & location info
+                                          'namaKepalaKeluarga': _safeToString(
+                                            keluarga?['nama_kepala_keluarga'],
+                                          ),
+                                          'rt': _safeToString(keluarga?['rt']),
+                                          'rw': _safeToString(keluarga?['rw']),
+                                          'dusun': _safeToString(
+                                            keluarga?['dusun'],
+                                          ),
+                                          'lingkungan': _safeToString(
+                                            keluarga?['lingkungan'],
+                                          ),
+                                          'mawar':
+                                              _safeToString(
+                                                    desaWisma?['nama_desa'],
+                                                  ) !=
+                                                  ''
+                                              ? _safeToString(
+                                                  desaWisma?['nama_desa'],
+                                                )
+                                              : 'Desa Wisma',
+                                        };
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                PreviewDataWargaPage(
+                                                  wargaData: wargaMap,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 12,
                                         ),
-                                      );
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE8E8E8),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  w.nama,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 15,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  w.mawar,
-                                                  style: const TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE8E8E8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
-                                          Text(
-                                            w.nik,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    warga?.nama ??
+                                                        'Nama tidak diketahui',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 15,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    warga?.statusDalamKeluarga ??
+                                                        'Anggota Keluarga',
+                                                    style: const TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                            Text(
+                                              warga?.nik ?? 'Belum ada NIK',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                    );
+                                  })
+                                  .toList(),
                             ),
                           ),
                         ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
